@@ -62,7 +62,7 @@ else
      # See: http://fedoraproject.org/wiki/Packaging:NamingGuidelines
      #
     C3_RPM_VERSION="$C3_MAJOR_VERSION.$C3_MINOR_VERSION.$C3_RELEASE_VERSION"
-    C3_RPM_RELEASE="0.1"
+    C3_RPM_RELEASE="1"
 
      # 
      # The Joy of Debian...
