@@ -95,7 +95,13 @@ install-contrib:
 
 install-man: 
 	echo "Installing C3 man pages..."
-	cd man; make install DESTDIR=$(DESTDIR)
+	install -d $(MANDIR)
+	install -d $(MANDIR)/man1
+	install -d $(MANDIR)/man4
+	install -d $(MANDIR)/man5
+	install -m 644 man/man1/* $(MANDIR)/man1
+	install -m 644 man/man4/* $(MANDIR)/man4
+	install -m 644 man/man5/* $(MANDIR)/man5
 
 install-ckillnode: 
 	echo "Installing C3 ckillnode..."
