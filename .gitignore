@@ -22,3 +22,7 @@ debian/c3
 debian/c3-ckillnode 
 debian/c3*.log
 debian/c3-contrib/
+config.log
+config.status
+src/c3.csh
+src/c3.sh
