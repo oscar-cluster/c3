@@ -12,50 +12,50 @@ For more detailed C3 documentation, please refer to files in the 'doc/'
 directory.
 
 
-Creation of Debian packages
+Cloning c3 repo
+---------------
+   git clone https://github.com/oscar-cluster/c3.git
+
+
+Configure and add missing files
+-------------------------------
+You nee autotools installed (autoconf, automake and autolib)
+   autoreconf --install
+
+Creation of dist tarball and distro packages.
 ---------------------------
-To build the C3 Debian packages from an SVN check-out, just type:
+To build the C3 source tarball and disto packages, just type:
 
-   ./autogen.sh && ./configure && make clean && make dist
+   - prepare the build tree:
+        ./configure && make clean
+   - dist tarball:
+        make dist
+   - rpm packages:
+        make dist-rpm
+   - deb packages:
+        make dist-deb
 
-This command creates a tarball of C3. Then copy and untar this tarball 
-in a temporary location that will be used to create the Debian package. 
-
-For instance, with a v5.0 tarball, just type:
-
-   tar -zxf c3-5.0.tar.gz -C /tmp
-
-Finally execute the following command to create the Debian package.
-(Note, this can be run from a standard user account.)
-
-   dpkg-buildpackage -rfakeroot -us -uc
-
-All Debian packages will be automatically created.  Please, also update the
-changelog if needed (the dch tool can help you for that).
-
-
-
-Trac / Subversion
+GitHub
 -----------------
-When fixing/closing a bug in the Trac repository, 
-(https://bison.csm.ornl.gov/trac/c3/), you should:
+When fixing/closing a bug in the oscar-cluster/c3 repository, 
+(https://github.com/oscar-cluster/c3), you should:
 
- 1) include the Trac bug number in the SVN commit message
- 2) include the SVN changeset number in the Trac comments
+ 1) include the GitHub bug number in the GIT commit message
+ 2) include the GIT changeset number in the bug comments
 
 
-For example: 
+For example:
  * When fixing bug number '12' do something like the following 
-   in the Subversion commit msg (mention bug# early in log msg) 
+   in the git commit msg (mention bug# early in log msg) 
 
-   # Subversion commit comment
-   $ svn ci -m "+ Fixes #12 - problem in c3.csh when env vars not already exist"
+   # git commit comment
+   $ git commit -m "+ Fixes #12 - problem in c3.csh when env vars not already exist"
 
 
- * When closing bug number '12' in Trac, add a comment with
-   the Subversion changeset (e.g., r166) that contains the fix, e.g.,
+ * When closing bug number '12' in github, add a comment with
+   the git changeset (e.g., 4486a42) that contains the fix, e.g.,
 
-       "Fixed in [166]."
+       "Fixed in [4486a42]."
    
    Then set the 'Action' to the proper value, e.g., "resolve as: fixed".
 
