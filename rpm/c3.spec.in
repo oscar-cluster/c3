@@ -1,27 +1,19 @@
 # $Id: c3.spec.in 265 2013-03-20 01:03:01Z tjn $
 
-%define   name        c3
-%define   ver         @C3_RPM_VERSION@
-%define   rel         @C3_RPM_RELEASE@
-%define   c3ver       @C3_VERSION@
-%define   prefix      /
-%define   profiled    /etc/profile.d
-
-
 Summary: Cluster Command and Control (C3) - command line tool suite  
-Name: %{name}
-Version: %{ver}
-Release: %{rel}
+Name:    c3
+Version: @C3_RPM_VERSION@
+Release: @C3_RPM_RELEASE@
 License: freely distributable
 Group: Application/System
-Source0: %{name}-%{c3ver}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 Packager: Thomas Naughton <naughtont@ornl.gov>
 URL: http://www.csm.ornl.gov/torc/C3/
 AutoReqProv: no
 Requires: rsync
 Requires: perl
 Requires: python >= 2.4
-BuildRoot: %{_tmppath}/%{name}-%{ver}-root
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildArch: noarch
 
 %description
@@ -93,8 +85,7 @@ The Cluster Command and Control (C3) - contrib scripts
 %__rm -rf $RPM_BUILD_ROOT
 
 # Actually do the untar/gzip stuff
-# We use the c3ver that matches our standard tarball names 
-%setup -n %{name}-%{c3ver}
+%setup
 
 
 
@@ -105,67 +96,23 @@ The Cluster Command and Control (C3) - contrib scripts
 
 %build
 if [ -x ./configure ]; then
-    ./configure --prefix=/
+%configure
 else
-    ./autogen.sh && ./configure
+    ./autogen.sh && %configure
 fi
 
-%__mkdir -p $RPM_BUILD_ROOT/%{profiled}
+%install
 
-%__make install-c3cmd-filter DESTDIR=$RPM_BUILD_ROOT \
-        BINDIR=$RPM_BUILD_ROOT/usr/bin
+%makeinstall CONTRIBDIR=%{buildroot}/%{_bindir}
+%{__rm} -rf %{buildroot}/%{_datadir}/doc/c3
 
-%__make install-c3 DESTDIR=$RPM_BUILD_ROOT \
-        BINDIR=$RPM_BUILD_ROOT/usr/bin \
-        MANDIR=$RPM_BUILD_ROOT/usr/share/man \
-        DOCDIR=$RPM_BUILD_ROOT/usr/share/doc/c3
-
-%__make install-ckillnode DESTDIR=$RPM_BUILD_ROOT \
-        BINDIR=$RPM_BUILD_ROOT/usr/bin
-
-%__make install-contrib DESTDIR=$RPM_BUILD_ROOT\
-        BINDIR=$RPM_BUILD_ROOT/usr/bin CONTRIBDIR=$RPM_BUILD_ROOT/usr/bin
-
-%__make install-profiled DESTDIR=$RPM_BUILD_ROOT\
-	BINDIR=$RPM_BUILD_ROOT/usr/bin CONTRIBDIR=$RPM_BUILD_ROOT/usr/bin
-
-#%__mv   $RPM_BUILD_ROOT/usr/bin/c3.*h $RPM_BUILD_ROOT/etc/profile.d
-
-## Copy the build distribution to target install dir.  The files must
-## exist in the desired location (path) when RPM checks the filelist. This
-## is greatly simplified by using the BuildRoot (chroot sort of thing) method.
-#%__mkdir -p $RPM_BUILD_ROOT/%{prefix}
-#%__mkdir -p $RPM_BUILD_ROOT/%{profiled}
-#%__mkdir -p $RPM_BUILD_ROOT/usr/bin
-#
-#%__cp -Rf $RPM_BUILD_DIR/%{name}-%{ver}/* \
-#	  $RPM_BUILD_ROOT/%{prefix}
-#
-## Move executables from 'src/' to top-level, and remove 'src/' sub-dir 
-#%__mv -f $RPM_BUILD_ROOT/%{prefix}/src/* \
-#	  $RPM_BUILD_ROOT/%{prefix}
-#
-#/bin/rmdir $RPM_BUILD_ROOT/%{prefix}/src/
-#
-#%__cp -Rf $RPM_BUILD_DIR/%{name}-%{ver}/src/c3.sh \
-#	  $RPM_BUILD_ROOT/%{profiled}
-#
-#%__cp -Rf $RPM_BUILD_DIR/%{name}-%{ver}/src/c3.csh \
-#	  $RPM_BUILD_ROOT/%{profiled}
-#
-#%__cp -f $RPM_BUILD_DIR/%{name}-%{ver}/contrib/c3cmd-filter \
-#	  $RPM_BUILD_ROOT/usr/bin/c3cmd-filter
-#
-#%__cp -f $RPM_BUILD_DIR/%{name}-%{ver}/src/ckillnode \
-#	  $RPM_BUILD_ROOT/usr/bin/ckillnode
 
 #---------------------------------------------------------------------
 # Clean section
 #---------------------------------------------------------------------
-
 %clean
 # Get rid of any tmp files in RPM land, ie. '/usr/src/redhat/BUILD/...'
-%__rm -rf $RPM_BUILD_DIR/%{name}-%{ver}
+%__rm -rf $RPM_BUILD_DIR/%{name}-%{version}
 %__rm -rf $RPM_BUILD_ROOT
 
 
@@ -174,7 +121,7 @@ fi
 # Pre-un(install) section
 #---------------------------------------------------------------------
 %preun
-%__rm -f %{prefix}/*.pyc
+#%__rm -f %{prefix}/*.pyc
 
 
 
@@ -198,35 +145,56 @@ fi
 %doc INSTALL README ChangeLog
 %doc doc/KNOWN_BUGS doc/README.devel doc/README.scale 
 %doc doc/README.c3_com_obj doc/README.c3_file_obj
-%{prefix}/usr/bin
-%{prefix}/usr/share
+%{_bindir}/c3_com_obj.py
+%{_bindir}/c3_config.py
+%{_bindir}/c3_except.py
+%{_bindir}/c3_file_obj.py
+%{_bindir}/c3_sock.py
+%{_bindir}/c3_version.py
+%{_bindir}/c3cmd-filter
+%{_bindir}/cexec
+%{_bindir}/cexecs
+%{_bindir}/cget
+%{_bindir}/ckill
+%{_bindir}/clist
+%{_bindir}/cname
+%{_bindir}/cnum
+%{_bindir}/cpush
+%{_bindir}/cpushimage
+%{_bindir}/crm
+%{_bindir}/cshutdown
+%{_datadir}/*
 
 
 %files ckillnode
 %defattr(-,root,root)
-/usr/bin/ckillnode
+%{_bindir}/ckillnode
 
 
 %files profiled
 %defattr(-,root,root)
-%{profiled}
+%{_sysconfdir}/profile.d
 
 %files c3cmd-filter
 %defattr(755,root,root)
-/usr/bin/c3cmd-filter
+%{_bindir}/c3cmd-filter
 
 %files contrib
 %defattr(755,root,root)
-/usr/bin/add_user
-/usr/bin/c3_conf_manager
-/usr/bin/enable_clusters
-/usr/bin/push_passwd
-/usr/bin/sync_date
+%{_bindir}/add_user
+%{_bindir}/c3_conf_manager
+%{_bindir}/enable_clusters
+%{_bindir}/push_passwd
+%{_bindir}/sync_date
 
 #---------------------------------------------------------------------
 # ChangeLog section
 #---------------------------------------------------------------------
 %changelog
+* Thu Oct 03 2013  16:19:19PM    Olivier Lahaye <olivier.lahaye@cea.fr>
+- Specfile cleanup.
+- Avoid owning /usr/bin (conflict with filesystem package).
+
 * Fri Jan 21 2011  16:44:19PM    Thomas Naughton <naughtont@ornl.gov>
 - (5.1) Adjust python requires line to be .ge. python-2.4
 
