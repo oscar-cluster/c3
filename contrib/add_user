@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Basic example for adding a user ("adduser") to the cluster.
 #
@@ -8,12 +8,12 @@ import os, sys
 try:
 	user_name = sys.argv[1]
 except IndexError:
-	print "must supply a user name"
+	print("must supply a user name")
 	sys.exit()
 try:
 	user_group = sys.argv[2]
 except IndexError:
-	print "must supply a group name"
+	print("must supply a group name")
 	sys.exit()
 
 string_to_execute = "adduser -g " + user_group + " -m " + user_name

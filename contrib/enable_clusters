@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 #
 # Script to add/enable SSH to a given cluster.
 #
@@ -61,16 +61,16 @@ c3_command = c3_com_obj.c3_command_line( command_line_string )
 try:
 	option = c3_command.get_opt()
 	file_set = 0
-        while option: # while more options
-                if (option == '-f') or (option == '--file'): # alternate config file
+	while option: # while more options
+		if (option == '-f') or (option == '--file'): # alternate config file
 			if not file_set:
-                        	filename = c3_command.get_opt_string()
+				filename = c3_command.get_opt_string()
 				file_set = 1
 			else:
-				print "only one file name can be specified."
+				print("only one file name can be specified.")
 				sys.exit()
 		elif option == '-h' or option == "--help": # print help info
-			print help_info
+			print(help_info)
 			sys.exit()
 		elif option == '--key' or option == '-k':
 			type = c3_command.get_opt_string()
@@ -79,14 +79,14 @@ try:
 			elif type == 'rsa':
 				type = 2
 			else:
-				print "invalid key type, rsa or dsa only valid types"
+				print("invalid key type, rsa or dsa only valid types")
 				sys.exit()
-                else: # a catch all, option supplied not valid
-                        print "option ", option, " is not valid"
+		else: # a catch all, option supplied not valid
+			print("option " + option + " is not valid")
 			sys.exit()
-                option = c3_command.get_opt()
+		option = c3_command.get_opt()
 except c3_com_obj.end_of_option: #quit parsing options
-        pass
+	pass
 
 # create cluster object from command line 
 clusters = c3_com_obj.c3_cluster_list()
@@ -117,7 +117,7 @@ except KeyError:
 try: # open file & initialize file parser
 	file = c3_file_obj.cluster_def( filename )
 except IOError:
-	print "error opening file: ", filename
+	print("error opening file: " + filename)
 	sys.exit()
 
 # note, someday need to change to only get clusters needed, need changes to the
@@ -127,7 +127,7 @@ try:
 	file.get_next_cluster() # set the default cluster (first cluster in list)
 	default_cluster = file.get_cluster_name()
 
-        while(1): #throws exception when no more clusters
+	while(1): #throws exception when no more clusters
 		c_name = file.get_cluster_name() #name of cluster being parsed
 		cluster_from_file[c_name] = {}
 		cluster_from_file[c_name]['external'] = file.get_external_head_node()
@@ -136,9 +136,9 @@ try:
 		file.get_next_cluster() #repeat untill no more clusters
 except c3_file_obj.no_more_clusters:
  	pass
-except c3_file_obj.parse_error, error:
-        print error.description
-        print "somewhere around ", error.last
+except c3_file_obj.parse_error as error:
+	print(error.description)
+	print("somewhere around " + error.last)
 	sys.exit()
 
 #######################################################
@@ -173,7 +173,7 @@ for cluster in clusters.clusters:
 	try: 
 		local_ip = socket.gethostbyname( socket.gethostname() )
 	except socket.error:
-		print "Can not resolve local hostname"
+		print("Can not resolve local hostname")
 		sys.exit()
 	try:
 		int_ip = socket.gethostbyname( cluster_from_file[cluster]['internal'] )
@@ -189,10 +189,10 @@ for cluster in clusters.clusters:
 	
 	if cluster_from_file[cluster]['external']: # if a direct cluster
 		if ext_ip == local_ip or int_ip == local_ip: # if a local cluster
-			print "local cluster, doing nothing"
+			print("local cluster, doing nothing")
 		else: # remote cluster
 			if ext_ip == "": # error condition
-				print "Can not resolve ", cluster_from_file[cluster]['external']
+				print("Can not resolve " + cluster_from_file[cluster]['external'])
 				sys.stdout.flush()
 			else:
 				if type == 0 or type == 1: #dsa key
@@ -219,11 +219,11 @@ for cluster in clusters.clusters:
 	else: # indirect clusters
 		if int_ip == local_ip:  # can not have a indirect local cluster since if your default cluster
 					# is local you would generate a circular reference
-			print "error local cluster"
+			print("error local cluster")
 			sys.stdout.flush()
 		else: # remote indirect cluster
 			if int_ip == "": # error condition
-				print "Can not resolve hostname ", cluster_from_file[cluster]['internal']
+				print("Can not resolve hostname " + cluster_from_file[cluster]['internal'])
 				sys.stdout.flush()
 			else:
 				if type == 0 or type == 1: #dsa key
