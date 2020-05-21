@@ -17,6 +17,6 @@ except KeyError:
 	if os.path.isfile('/usr/bin/cexec') and os.access('/usr/bin/cexec', os.X_OK):
 		def_path = '/usr/bin'
 	else:
-		def_path = '/opt/c3-' + `c3_version.c3_version_major`
+		def_path = '/opt/c3-' + repr(c3_version.c3_version_major)
 
 # vim:tabstop=4:shiftwidth=4:noexpandtab:textwidth=76

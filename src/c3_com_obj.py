@@ -19,7 +19,7 @@ class c3_command_line:
 
 
 	# matches any non whitespace word
-        any_token = re.compile( r"\s*(?P<word>\S+)" )
+	any_token = re.compile( r"\s*(?P<word>\S+)" )
 
 	# matches a - or -- and then the option name
 	option = re.compile( r"\s*(?P<word>--?\w+)" )

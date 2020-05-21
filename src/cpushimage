@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # $Id: cpushimage 205 2011-01-26 03:58:33Z tjn $
 
 import c3_config
@@ -34,7 +34,7 @@ try:
 
 	######## check for arguments  #########################
 	if len(sys.argv) == 1:
-		print help_info
+		print(help_info)
 		sys.exit()
 	#######################################################
 
@@ -87,11 +87,11 @@ try:
 					filename = c3_command.get_opt_string()
 					file_set = 1
 				else:
-					print "only one file name can be specified."
+					print("only one file name can be specified.")
 					sys.exit()
 					
 			elif option == '-h' or option == "--help": # print help info
-				print help_info
+				print(help_info)
 				sys.exit(c3_config.C3_OKEXIT)
 				
 			elif option == '-i': # ask once before executing command
@@ -105,10 +105,10 @@ try:
 		
 			elif option == '--version' or option == '-v':
 				# Get C3's version
-				print c3_version.c3_version
+				print(c3_version.c3_version)
 				sys.exit(c3_config.C3_OKEXIT)
 			else: # a catch all, option supplied not valid
-				print "option ", option, " is not valid"
+				print("option ", option, " is not valid")
 				sys.exit(c3_config.C3_ERRLOCAL)
 			option = c3_command.get_opt()
 	except c3_com_obj.end_of_option: #quit parsing options
@@ -148,7 +148,7 @@ try:
 	try: # open file & initialize file parser
 		file = c3_file_obj.cluster_def( filename )
 	except IOError:
-		print "error opening file: ", filename
+		print("error opening file: ", filename)
 		sys.exit(c3_config.C3_ERRLOCAL)
 
 	# note, someday need to change to only get clusters needed, need changes to the
@@ -189,9 +189,9 @@ try:
 			file.get_next_cluster() #repeat untill no more clusters
 	except c3_file_obj.no_more_clusters:
 		pass
-	except c3_file_obj.parse_error, error:
-		print error.description
-		print "somewhere around ", error.last
+	except c3_file_obj.parse_error as error:
+		print(error.description)
+		print("somewhere around ", error.last)
 		sys.exit(c3_config.C3_ERRLOCAL)
 
 	#######################################################
@@ -218,7 +218,7 @@ try:
 
 
 	while interactive: # if interactive execution, prompt once before executing
-                answer = raw_input( "Push the following image(y or n): " + imagename + " :" )
+                answer = input( "Push the following image(y or n): " + imagename + " :" )
                 if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
                         sys.exit()
                 if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
@@ -232,14 +232,14 @@ try:
 		try: 
 			local_ip = socket.gethostbyname( socket.gethostname() )
 		except socket.error:
-			print "Can not resolve local hostname"
+			print("Can not resolve local hostname")
 			sys.exit(c3_config.C3_ERRLOCAL)
 		try:
 			int_ip = socket.gethostbyname( cluster_from_file[cluster]['internal'] )
 		except socket.error:
 			int_ip = ""
 		except KeyError:
-			print "Cluster ", cluster, " is not in you configuration file."
+			print("Cluster ", cluster, " is not in you configuration file.")
 			continue
 		try:
 			ext_ip = socket.gethostbyname( cluster_from_file[cluster]['external'] )
@@ -253,9 +253,9 @@ try:
 			if ext_ip == local_ip or int_ip == local_ip: # if a local cluster
 
 				if ext_ip == "": # error conditions (just don't execute current cluster)
-					print "Can not resolve ", cluster_from_file[cluster]['external']
+					print("Can not resolve ", cluster_from_file[cluster]['external'])
 				elif int_ip == "":
-					print "can not resolve ", cluster_from_file[cluster]['internal']
+					print("can not resolve ", cluster_from_file[cluster]['internal'])
 
 				elif clusters.node[cluster][0] != "" : #range specified on command line
 					try:
@@ -266,7 +266,7 @@ try:
 									node_name = cluster_from_file[cluster]['nodes'][node].name
 									string_to_execute = transport + " " + node_name + " \'/usr/sbin/updateclient " + options + " -server " + int_ip + " -image " + imagename + "\'"
 									if dryrun:
-										print string_to_execute
+										print(string_to_execute)
 										os._exit(c3_config.C3_OKEXIT)
 									code = os.system( string_to_execute )>>8
 									os._exit(code)
@@ -281,14 +281,14 @@ try:
 								node_name = node.name
 								string_to_execute = transport + " " + node_name + " \'/usr/sbin/updateclient " + options + " -server " + int_ip + " -image " + imagename + "\'"
 								if dryrun:
-									print string_to_execute
+									print(string_to_execute)
 									os._exit(0)
 								code = os.system( string_to_execute )>>8
 								os._exit(code)
 							pidlist.append(pid)
 			else: # remote cluster
 				if ext_ip == "": # error condition
-					print "Can not resolve ", cluster_from_file[cluster]['external']
+					print("Can not resolve ", cluster_from_file[cluster]['external'])
 					sys.stdout.flush()
 				else:
 					# generate temprorary config file
@@ -318,7 +318,7 @@ try:
 
 					string_to_execute = transport + " " + ext_ip + " " + c3_config.def_path + "/cget --head --non_interactive " + filename
 					if dryrun:
-						print string_to_execute
+						print(string_to_execute)
 					else:
 						sock = c3_sock.server_sock( string_to_execute )
 						answer = sock.recieve()
@@ -340,14 +340,14 @@ try:
 					# execute commend remotely
 					string_to_execute = transport + " " + ext_ip + " \' " + c3_config.def_path + "/cpushimage -f " + filename + " " + c3_options + " " + imagename + " \'" 
 					if dryrun:
-						print string_to_execute
+						print(string_to_execute)
 					else:
 						code = os.system( string_to_execute )>>8
 						if( code != 0 ): returncode = code
 					# remove temporary file
 					string_to_execute = transport + " " + ext_ip + " /bin/rm -f " + filename
 					if dryrun:
-						print string_to_execute
+						print(string_to_execute)
 					else:
 						code = os.system( string_to_execute )>>8
 						if( code != 0 ): returncode = code
@@ -356,11 +356,11 @@ try:
 		else: # indirect clusters
 			if int_ip == local_ip:  # can not have a indirect local cluster since if your default cluster
 						# is local you would generate a circular reference
-				print "error local cluster"
+				print("error local cluster")
 				sys.stdout.flush()
 			else: # remote indirect cluster
 				if int_ip == "": # error condition
-					print "Can not resolve hostname ", cluster_from_file[cluster]['internal']
+					print("Can not resolve hostname ", cluster_from_file[cluster]['internal'])
 					sys.stdout.flush()
 				else:
 					node_list = "" # generate new node list from the command line
@@ -372,7 +372,7 @@ try:
 					# execute command on remote machine
 					string_to_execute = transport + " " + int_ip + " \' " + c3_config.def_path + "/cpushimage " + c3_options + " " + node_list + " "+ imagename + " \'" 
 					if dryrun:
-						print string_to_execute
+						print(string_to_execute)
 						os._exit(0)
 					code = os.system( string_to_execute )>>8
 					if( code != 0 ): returncode = code
@@ -382,7 +382,7 @@ try:
 		pid, code = os.wait()
 		if(code>>8 != 0): returncode = code>>8
 except KeyboardInterrupt:
-        print "Keyboard interrupt\n"
+        print("Keyboard interrupt\n")
 
 system.exit(returncode)
 

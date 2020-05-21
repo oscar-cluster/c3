@@ -157,7 +157,7 @@ class cluster_def:
 	# scans to next cluster in the file, if called for the  #
 	# first time goes to first cluster			#
 	# doesn't return anything, just sets internal variable	#
- 	#########################################################
+	#########################################################
 	def get_next_cluster(self):
 
 		self.strip_comments()
@@ -166,15 +166,15 @@ class cluster_def:
 		try:
 			while not match:  #loop untill a cluster tag is found
 				match = self.cluster_name.match( self.line )
-			        if match: #if cluster tag found
+				if match: #if cluster tag found
 					# get cluster name
 					self.c_name = match.group( "c_name" )
 					self.line = self.line[match.end():]
 					self.strip_comments()
 					self.last_cluster = self.c_name 
-			        	try:
+					try:
 						match = self.head_node.match( self.line )
-				        	if not match.group( "extname" ):
+						if not match.group( "extname" ):
 							# this indicates that it is an "indirect" cluster
 							# the internal node is actually the external link
 							# it was done this way because with normal operation
@@ -190,7 +190,7 @@ class cluster_def:
 						name = self.c_name
 						self.reset_vars()
 						raise invalid_head_node( "invalid head node specification", name)
-				       	self.line = self.line[match.end():]
+					self.line = self.line[match.end():]
 					self.strip_comments()
 				else: # cluster tag not found
 					# strip a single token from self.line
@@ -256,22 +256,22 @@ class cluster_def:
 
 		match = self.compute_node.match( self.line )
  
-	        if match: # if a compute node is found
+		if match: # if a compute node is found
 
 			self.line = self.line[match.end():]
 			self.strip_comments()
-               		if match.group( "dead_node" ): # check if it is a dead node 
-	                        if not match.group( "range" ): # dead node qualifier invalid with a range
-               		        	node_out.name = match.group( "comname" )
+			if match.group( "dead_node" ): # check if it is a dead node 
+				if not match.group( "range" ): # dead node qualifier invalid with a range
+					node_out.name = match.group( "comname" )
 					node_out.dead = 1        
-	                        else: # return the given node with a dead set to true
+				else: # return the given node with a dead set to true
 					name = self.last_machine + " in " + self.c_name
 					self.reset_vars()
 					raise invalid_node( "dead specifier can not have a range", name )
-	                else: # either a range or single node specified
-               		        if match.group( "range" ): # if range
+			else: # either a range or single node specified
+				if match.group( "range" ): # if range
 					# retrieve starting and stopping ranges
-               		                start_add_range = int( match.group( "start" ) )
+					start_add_range = int( match.group( "start" ) )
 					stop_add_range = int( match.group( "stop" ) ) + 1
 					# start is always zero - start_add_range - start_add_range
 					# this is done so that the indexing starts at zero
@@ -283,8 +283,8 @@ class cluster_def:
 						self.node_list[index].dead = 0
 					match = self.exclude.match( self.line )
 					# multiple exclude lines after a range are valid, hence the while loop
-	        		        while match and self.node_list: 
-	                			try:
+					while match and self.node_list: 
+						try:
 							if match.group( "single" ): # excluding a single machine
 								index = int( match.group( "single" ) ) 
 								if index < 0:
@@ -311,11 +311,11 @@ class cluster_def:
 					node_out = self.node_list.pop(0)
 				else: # single node specifier 
 					node_out.name = match.group( "comname" )
-					node_out.dead = 0	
-	               
-               		
+					node_out.dead = 0
+
+
 		else: # either there are no more nodes ( closing bracket is found )
-		      # or there was a parse error on the node specification line
+			# or there was a parse error on the node specification line
 			if self.end_bracket.match( self.any_token.match(self.line).group() ):
 				raise end_of_cluster( "no more nodes in config file", None )
 			name = self.last_machine + " in " + self.c_name

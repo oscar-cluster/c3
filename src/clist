@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # $Id: clist 186 2011-01-21 23:07:00Z tjn $
 
 import c3_config
@@ -40,8 +40,8 @@ try:
 		option = c3_command.get_opt()
 		while option: # while more options
 			if option == '-h' or option == "--help": # print help info
-				print help_info
-				print "exiting...."
+				print(help_info)
+				print("exiting....")
 				sys.exit(c3_config.C3_OKEXIT)
 
 			elif (option == '-f') or (option == '--file'): # alternate config file
@@ -49,15 +49,15 @@ try:
 					filename = c3_command.get_opt_string()
 					file_set = 1
 				else:
-					print "only one file name can be specified."
+					print("only one file name can be specified.")
 					sys.exit(c3_config.C3_ERRLOCAL)
 			
 			elif option == '--version' or option == '-v':
 				# Get C3's version
-				print c3_version.c3_version
+				print(c3_version.c3_version)
 				sys.exit(c3_config.C3_OKEXIT)
 			else:
-				print "invalid option"
+				print("invalid option")
 				sys.exit(c3_config.C3_ERRLOCAL)
 			option = c3_command.get_opt()
 	except c3_com_obj.end_of_option:
@@ -75,7 +75,7 @@ try:
 	try: # open file & initialize file parser
 		file = c3_file_obj.cluster_def( filename )
 	except IOError:
-		print "error opening file: ", filename
+		print("error opening file: ", filename)
 		sys.exit(c3_config.C3_ERRLOCAL)
 
 	try:
@@ -84,7 +84,7 @@ try:
 			try:
 				local_ip = socket.gethostbyname( socket.gethostname() )
 			except socket.error:
-				print "Can not resolve local hostname"
+				print("Can not resolve local hostname")
 				sys.exit(c3_config.C3_ERRLOCAL)
 			try:
 				int_ip = socket.gethostbyname( file.get_internal_head_node() )
@@ -99,22 +99,22 @@ try:
 
 			if file.get_external_head_node():
 				if ext_ip == local_ip or int_ip == local_ip:
-					print "cluster ", file.get_cluster_name(), " is a direct local cluster"
+					print("cluster ", file.get_cluster_name(), " is a direct local cluster")
 				else:
-					print "cluster ", file.get_cluster_name(), " is a direct remote cluster"
+					print("cluster ", file.get_cluster_name(), " is a direct remote cluster")
 			else:
-				print "cluster ", file.get_cluster_name(), " is an indirect remote cluster"
+				print("cluster ", file.get_cluster_name(), " is an indirect remote cluster")
 			
 			
 	except c3_file_obj.no_more_clusters:
 		pass
 		
-	except c3_file_obj.parse_error, error:
-		print error.description
-		print "somewhere around ", error.last
+	except c3_file_obj.parse_error as error:
+		print(error.description)
+		print("somewhere around ", error.last)
 		sys.exit(c3_config.C3_ERRLOCAL)
 except KeyboardInterrupt:
-        print "Keyboard interrupt\n"
+        print("Keyboard interrupt\n")
         
 sys.exit(c3_config.C3_OKEXIT)
 
