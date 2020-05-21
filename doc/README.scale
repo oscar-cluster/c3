@@ -1,0 +1,184 @@
+         C3 version 5:   Cluster Command & Control Suite
+           Oak Ridge National Laboratory, Oak Ridge, TN,
+     Authors: M.Brim, R.Flanery, G.A.Geist, B.Luethke, S.L.Scott
+                 (C) 2007 All Rights Reserved
+ 
+                             NOTICE
+
+ Permission to use, copy, modify, and distribute this software and
+ its documentation for any purpose and without fee is hereby granted
+ provided that the above copyright notice appear in all copies and
+ that both the copyright notice and this permission notice appear in
+ supporting documentation.
+ 
+ Neither the Oak Ridge National Laboratory nor the Authors make any
+ representations about the suitability of this software for any
+ purpose.  This software is provided "as is" without express or
+ implied warranty.
+ 
+ The C3 tools were funded by the U.S. Department of Energy.
+
+
+I. SCALABLE INSTALLATION 
+------------------------
+
+First, read the INSTALL document and make sure you have followed the
+directions in step A and B and read step C.
+
+D. Scalable configuration file
+
+The syntax of the scalable configuration file is identical to the
+non-scalable configuration file but the meanings of the positions have
+changed. 
+
+The basic concept is that the cluster is broken into smaller sub-clusters
+that execute in parallel. For example, a 64 node cluster could be broken
+into many different combinations, eight 8-way sub clusters, four 16-way
+sub-clusters, or two 32-way sub-clusters. The closer to a square you can
+break the cluster into the better the performance - thus we will choose the
+eight 8-way execution model.
+
+There may be other considerations in deciding the level of fanout in each
+sub-cluster.  No sub-cluster should have nodes in its list of
+responsibilities that are one different switches - inter-switch
+communication is much slower than intra-switch communication.  There is also
+a maximum on the level of fanout that one should observe. For example, on
+our hardware the scripts begin to really slow down at around a 64 way fanout
+leaving the largest cluster we should support being a 64 64-way fanout (or
+4096 nodes). For most people this only makes a difference with slow hardware
+and a large number of nodes.  And lastly, for small clusters (8 nodes and
+below for us) the non-scalable may be faster due to less communication
+overhead, once again depending on your hardware.
+
+The last major decision that must be made before continuing is whether to
+include the staging node (this is the "head node" for each sub-cluster - the
+command is staged on that node before being sent to its list of
+responsibilities) in it's list of responsibilities. That is, should the
+staging node be separate or part of the compute nodes. The staging node
+should be separate in the case where you have dedicated nodes into each of
+the sub-clusters. A system administrator will find many times the they will
+need the nodes separate and should have, at the least, their own private
+copy that is separate. If the staging nodes are simply just another node in
+the cluster then it should include it self as this is what mode users would
+expect.
+
+Once those decisions are made there are two versions of a scalable cluster
+to choose from.  A direct scalable cluster has all the layout of the cluster
+in a single file on the head node.  Due to extra communication between the
+head node and the staging nodes this is slightly slower (though it would
+only be noticeable on quick commands such a cexec). But it has the advantage
+of being easy to administrate. An indirect scalable cluster has a pointer to
+the staging node and that node has, stored locally, of its list of
+responsibilities. While this is somewhat faster it can be difficult to keep
+all the files correctly in sync with the hardware. If a node goes offline it
+can be troublesome to keep track of, if it is a staging node that goes
+offline it can be difficult to set up another node as a staging node. We use
+the direct scalable cluster as it is more convenient.
+
+NOTE: in the following two examples the first is a direct cluster and the
+second is an indirect cluster. Notice that they have the same syntax, but
+different meaning, than the non-scalable model. All the ranges, excludes,
+and dead tags still hold true.
+
+*************************************
+64 node direct scalable
+
+cluster part1 {
+        node1		#staging node
+        node[1-8]	#list of responsibilities
+ }
+
+cluster part2 {
+        node9
+        node[9-16]
+ }
+
+cluster part3 {
+        node17
+        node[17-24]
+ }
+
+cluster part4 {
+        node25
+        node[25-32]
+ }
+
+cluster part5 {
+        node33
+        node[33-40]
+ }
+
+cluster part6 {
+        node41
+        node[41-48]
+ }
+
+cluster part7 {
+        node49
+        node[49-56]
+ }
+
+cluster part8 {
+        node57
+        node[57-64]
+ } 
+
+*************************************
+64 node indirect scalable
+
+cluster part1 {
+        :node1		#staging node
+ }
+
+cluster part2 {
+        :node9
+ }
+
+cluster part3 {
+        :node17
+ }
+
+cluster part4 {
+        :node25
+ }
+
+cluster part5 {
+        :node33
+ }
+
+cluster part6 {
+        :node41
+ }
+
+cluster part7 {
+        :node49
+ }
+
+cluster part8 {
+        :node57
+ } 
+
+On node1 /etc/c3.conf
+
+cluster stage {
+	node1
+	node[1-8]
+}
+
+II. MISC 
+--------
+
+Two commands do not benefit from the scalable execution model. Cget, because
+it has a single point that all the commands must talk to, will not see much
+- if any - improvement. 
+
+Because SystemImager does not support staging of images it does not directly
+benefit from the scalable model. You can manipulate where an image is
+located and what it is an image of to get some benefit. First you must take
+an image of a compute node onto one of the staging nodes. Then on the
+head-node take an image of the staging node. Next, using cpushimage with the
+--head option push that image out to each staging node. Then, using
+cpushiamge push the image stored on the staging node to the compute nodes
+making sure that the staging node does not include it self in its list of
+responsibilities.
+

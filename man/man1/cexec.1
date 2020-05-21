@@ -1,0 +1,143 @@
+.\" cexec(s)(1)
+.\" 
+.\" this file with 'groff -man -Tascii cexec.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "CEXEC" "1" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBcexec(s)\fR \- A utility that executes a given command string on each node of a cluster.
+
+
+
+.SH "SYNOPSIS"
+.LP 
+Usage: \fBcexec(s)\fR [OPTIONS] [MACHINE DEFINITIONS] command
+.SH "DESCRIPTION"
+.LP 
+\fBcexec(s)\fR is a utility that executes a given string on each node of a cluster.  This command is intended to be a general purpose utility as opposed to the other commands in the C3 tools suite.  cexec is the parallel version and cexecs is the serial version.  The serial version of cexec is usefull for debugging a cluster (each node is executed and printed before the next node is run), otherwise it is suggested that you use the parallel version.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-\-help \-h\fR
+Display help message
+
+.TP 
+\fB\-\-file \-f <filename>\fR
+Alternate cluster configuration file.  If one is not supplied then \fI/etc/c3.conf\fR will be used.
+
+.TP 
+\fB\-i\fR
+Interactive mode.  Ask once before executing
+
+.TP 
+\fB\-\-head\fR
+Execute command on head node.  Does not execute on compute nodes.
+
+.TP 
+\fB\-\-pipe \-p\fR
+Formats the output in a pipe friendly fashion.  It prepends the cluster name, a space, the node name and a colon before each line of output.
+
+.TP 
+\fB\-\-dry\-run \-n\fR
+Does not send commands to machines.
+
+.TP 
+\fB\-\-all\fR
+Execute command on all nodes in all clusters that are accessable.  When specifying \fB\-\-head\fR only the head nodes will participate.  This ignores the [MACHINE_DEFINITIONS] section.
+
+.TP
+\fB\-\-version \-v\fR
+Output version information.
+
+.SH "GENERAL"
+.LP 
+There are several basic ways to call cexec:
+.BR 
+
+.LP 
+1.  To simply execute a command on the default cluster:
+.IP 
+\fBcexec mkdir temp\fR
+.IP 
+This creates a directory named temp in your home directory.
+
+.LP 
+2.  To execute a command on a subset of nodes on the default cluster:
+.IP 
+\fBcexec :2\-6 ls \-l\fR
+.IP 
+This executes ls with the \-l option on nodes 2, 3, 4, 5, 6.
+
+.LP 
+3.  To execute commands on a list of clusters:
+.IP 
+\fBcexec cluster1: cluster2: ls \-l\fR
+.IP 
+This executes ls with the \-l option on all the nodes in both clusters.
+
+.LP 
+4.  Quote position is important:
+.IP 
+\fBcexec "ps \-aux |grep root"\fR
+.IP 
+Will execute ps on each node, grep for root there, sort the output, and display it on the screen.
+.IP 
+\fBcexec ps \-aux |grep root\fR
+.IP 
+Will execute ps on each node, sort the output, grep out all the lines with root, and only display those lines to the screen.  This removes all the formatting, to use C3 in this method the \-\-pipe option should be used
+.SH "SETUP"
+.LP 
+See the C3 INSTALL file for installation instructions.   Also see C3_noderange for help on using node ranges on the command line.   If using the scalable setup please see c3\-scale
+.SH "ENVIRONMENT"
+.LP 
+C3_RSH
+.IP 
+By default, the C3 tools will use ssh to issue the remote commands.  If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh.
+.IP 
+For example, if you are using the bash shell you would do the following:
+.IP 
+\fBexport C3_RSH=rsh\fR
+.IP 
+Any program that behaves like rsh or ssh is acceptable.
+
+.LP 
+C3_PATH
+.IP 
+The default install path for C3 is /opt/c3\-5.  If you install C3 in an alternate location this variable must point to that installation.  For remote clusters C3 must be installed in the same directory on each cluster.
+.IP 
+For example, if you installed C3 in your home directory you might use the following:
+.IP 
+\fBexport C3_PATH=/home/sgrundy/c3\-5\fR
+.IP 
+
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+
+.LP 
+C3_USER
+.IP 
+By default, the C3 tools will use your local username to access a remote cluster.  If you wish to use a different default then set this variable to it.
+.IP 
+For example, this will change the example user from sgrundy to mmanhunter:
+.IP 
+\fBexport C3_USER=mmanhunter\fR
+.IP 
+.SH "FILES"
+.LP 
+\fB\fI/etc/c3.conf\fR\fR
+.IP 
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent.  The cluster configuration file of nodes may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf(5) man page for the format.
+.SH "SEE ALSO"
+c3(1), cget(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5), c3\-scale(5)

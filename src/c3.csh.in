@@ -1,0 +1,15 @@
+# $Id: c3.csh.in 277 2013-03-22 14:41:35Z tjn $
+
+if ( $?PATH == 0 ) then
+    setenv PATH "@prefix@/usr/bin"
+else
+    setenv PATH "${PATH}:@prefix@/usr/bin"
+endif
+
+if ( $?MANPATH == 0 ) then
+    setenv MANPATH "@prefix@/doc/man"
+else
+    setenv MANPATH "${MANPATH}:@prefix@/doc/man/"
+endif
+
+# vim:tabstop=4:shiftwidth=4:noexpandtab:textwidth=76

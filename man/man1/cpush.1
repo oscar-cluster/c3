@@ -1,0 +1,150 @@
+.\" cpush(1)
+.\" 
+.\" this file with 'groff -man -Tascii cexec.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "CPUSH" "1" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBcpush\fR \- A utility to push files from the local machine to the nodes in your cluster.
+
+
+
+.SH "SYNOPSIS"
+.LP 
+Usage: \fBcpush\fR [OPTIONS] [MACHINE DEFINITIONS] source(s) target
+.SH "DESCRIPTION"
+.LP 
+\fBcpush\fR is a utility that uses rsync to send a file or set of files specified by a list to the nodes in a cluster.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-h, \-\-help\fR
+Display help message.
+
+.TP 
+\fB\-f, \-\-file <filename>\fR
+Alternate cluster configuration file.  If one is not supplied then /etc/c3.conf will be used.
+
+.TP 
+\fB\-l, \-\-list <filename>\fR
+List of files to push. (see files section for format)
+Does not require a target to be specified on the command line.
+
+.TP
+\fB\-p, \-\-pushlist <filename>
+List of files to push. (see files section for format)
+Requires a target to be specified on the command line.
+
+.TP 
+\fB\-i\fR
+Interactive mode.  Ask once before executing.
+
+.TP 
+\fB\-\-head\fR
+Execute command on head node.  Does not execute on compute nodes.
+
+.TP 
+\fB\-\-nolocal\fR
+The source file lies on the head node of the remote cluster.
+
+.TP 
+\fB\-b, \-\-blind\fR
+Pushes the entire file. (normally cpush uses rsync to push changes and then rebuilds the file on the target node)
+
+.TP 
+\fB\-\-dry\-run \-n\fR
+Does not send commands to machines.
+
+.TP 
+\fB\-\-all\fR
+:execute command on all nodes in all clusters that are accessable.  When specifying \fB\-\-head\fR only the head nodes will participate.  This ignores the [MACHINE_DEFINITIONS] section.
+
+.TP
+\fB\-\-version \-v\fR
+Output version information.
+.SH "GENERAL"
+.LP 
+There are many ways to call cpush, here is a few examples:
+.BR 
+.LP 
+1.  To move a single file
+.IP  
+\fBcpush /home/filename /home/
+\fR
+.LP  
+2.  To move a single file, renaming that file on the cluster nodes:
+.IP  
+\fBcpush /home/filename1 /home/filename2\fR
+ 
+.LP 
+3.  To move a set of files listed in a file:
+.IP  
+\fBcpush \-\-list=/home/filelist\fR
+.IP 
+See files section for the format of the file list
+.SH "SETUP"
+.LP 
+See the C3 INSTALL file for installation instructions.  Also see C3_noderange for help on node ranges on the command line.  If using the scalable setup please see c3\-scale
+.SH "ENVIRONMENT"
+.LP 
+C3_RSH
+.IP 
+By default, the C3 tools will use ssh to issue the remote commands.  If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh.
+.IP 
+For example, if you are using the bash shell you would do the following:
+.IP 
+\fBexport C3_RSH=rsh\fR
+.IP 
+Any program that behaves like rsh or ssh is acceptable.
+
+.LP 
+C3_PATH
+.IP 
+The default install path for C3 is /opt/c3\-5.  If you install C3 in an alternate location this variable must point to that installation.  For remote clusters C3 must be installed in the same directory on each cluster.
+.IP 
+For example, if you installed C3 in your home directory you might use the following:
+.IP 
+\fBexport C3_PATH=/home/sgrundy/c3\-5\fR
+.IP 
+
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+
+.LP 
+C3_USER
+.IP 
+By default, the C3 tools will use your local username to access a remote cluster.  If you wish to use a different default then set this variable to it.
+.IP 
+For example, this will change the example user from sgrundy to mmanhunter:
+.IP 
+\fBexport C3_USER=mmanhunter\fR
+.IP 
+.SH "FILES"
+.LP 
+\fB\fI/etc/c3.conf\fR\fR
+.IP 
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent.  The cluster configuration file of nodes may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf(5) man page for the format.
+.BR 
+.LP 
+File list (\-\-list)
+.IP 
+The file list is a single file per line (both a relative and absolute path are ok) with the first column being the source and the second being the target.  If no target is specified it is assumed to be the same as the source.
+.BR
+.LP
+Push list (\-\-pushlist)
+.IP
+The push list is a multiple file per line (both a relative and absolute path are ok).  There are no targets specified anywhere in the file and linebreaks are considered to be the same as any other whitespace when parsing the file.
+.SH "SEE ALSO"
+c3(1), cget(1), ckill(1), cexec(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5), c3\-scale(5)

@@ -1,0 +1,49 @@
+#!/usr/bin/env perl
+#
+# $Id: c3cmd-filter 21 2003-11-03 02:58:10Z tjn $
+#
+# Used with C3 in order for nodes to convey error results
+# back to the controlling C3 command when only STDOUT/STDERR
+# is available for communication.  
+#
+# Input: Command to execute (note no security checking, simply exec as usual)
+# Ouput: Success - nothing is printed or displayed to output
+#        Failure - the error string from the open() or the cmd itself
+#                   is displayed
+#
+#
+
+use English;
+ 
+usage() unless( scalar(@ARGV) >  0 ); 
+my $cmd   = join(" ", @ARGV);
+
+my @rslt = ();
+if( defined( open(CMD, "$cmd 2>&1 |")) ) {   #Dup/redirect STDERR to STDOUT
+	@rslt = <CMD>;
+	close(CMD);
+
+	if( $CHILD_ERROR == 0 ) {
+		# All went fine, exit quietly
+		exit(0);
+	}
+	else {
+		# Command had an erroneous result
+		print @rslt;
+		exit($CHILD_ERROR);
+	}
+}
+else {
+	# Open failed
+	print "Error: Open failed ($cmd) $!\n";
+	exit(1);
+}
+
+#Should never get here.
+exit(0);
+
+sub usage
+{
+	print "Usage: $0  COMMAND\n";
+	exit(1);
+}

@@ -1,0 +1,80 @@
+.\" C3-RANGE(1)
+.\" 
+.\" this file with 'groff -man -Tascii cexec.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "C3-RANGE" "5" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBc3\-range\fR \- How to use and specify ranges on the command line in C3.
+
+
+.SH "SYNOPSIS"
+.LP 
+Ranges can be used to make sub clusters from the command line.  It is also useful to system administrators for testing new software on a small set of machines.
+.SH "DESCRIPTION"
+.LP 
+Ranges refer the the [MACHINE DEFINITIONS] in the help on the command line tools.  They consist of two parts, the \fIcluster name\fR and a \fIrange\fR.  If no range is specified then all the nodes of that cluster will participate in execution.
+.SH "GENERAL"
+.LP 
+Node ranges on the command line refer to their position in a cluster configuration file.  For the examples in this page we will use the following cluster configuration file:
+
+    cluster test {
+         external:internal
+         node[0\-9]
+         exclude 5
+         dead node32
+         node64
+    }
+
+.BR 
+.TP 
+\fBNode Position\fR
+For a detailed explanation of this format refer to \fIc3.conf(5)\fR.  This cluster consists of 11 nodes.  In C3, the place that node occupies in the configuration file is significant.  the first machine defined on the above example\-\-"external:internal"\-\-is the head node and will not participate in execution.  The following node range represents 9 nodes, node0...node9, occupying positions 0\-9 respectively.  node5 is offline for some reason but still needs to occupy a space so that the command line ranges stay consistent from execution to execution.  The next node (in position 10) is node32 (position in the command line argument is independent of the node's name, only the position in the file matters).  the dead qualifier has the same effect as the exclude.  It keeps that nodes position while still leaving it offline.  The last node, node65, occupies position 11.
+.BR 
+.TP 
+\fBSpecifieng ranges\fR
+Ranges can be specified in two ways:  one as a range, and the other as a single node.  Ranges are specified by the following format: m\-n, where m is a positive integer (including zero) and n is a number larger than m.  Single positions are just the position number.  If discontinuous ranges are needed, each range must be separated by a ",".  The range "0\-5, 9, 11" would execute on positions 0,1,2,3,4,5,9,11 (though in our example position 5 is offline so it would be skipped).  There are two tools used to help manage keeping track of which nodes are at which position: \fBcname(1)\fR and \fBcnum(1)\fR.  cnum assumes that you know a single node name and want to know its position.  cname takes a range argument and returns the node names at those positions (if no range is specified it assumes that you want all the nodes in the cluster).  See their man pages for details of use.  \fINOTE: ranges begin at zero!\fR
+.BR 
+.TP 
+\fBMACHINE DEFINITIONS\fR
+Machine definitions are what C3 uses to specify clusters and ranges on the command line.  There are four cases a machine definition can take.  First is that one is not specified at all.  C3 will execute on all the nodes on the default cluster in this case.  The second case is a range on the default cluster.  This is in a form of <\fB:range\fR>.  An example cexec would be as follows:
+.BR 
+.LP 
+         cexec :1\-4,6 ls \-l
+.BR 
+.IP 
+This would execute ls on nodes 1,2,3,4,6 of the default cluster.  The third method is specifying a specific cluster.  This takes the form of <\fBcluster_name:\fR>.  And example cexec would be as follows:
+.BR 
+.LP 
+         cexec test: ls \-l
+.BR 
+.IP 
+This would execute ls on every node in cluster test.  The fourth and final way of specifying a machine definition would be a range on a specific cluster.  This takes the form of <\fBcluster_name:range\fR>.  An example cexec would be as follows:
+.BR 
+.LP 
+         cexec test:2\-4,10 ls \-l
+.BR 
+.IP 
+This would executes on nodes 2,3,4,10 on cluster test.  These four methods can be mixed on a single command line.  For example:
+.BR 
+.LP 
+         cexec :0\-4 htorc1: htorc2:1\-5 ls \-l
+.BR 
+.IP 
+is a valid command.  It would execute ls on nodes 0,1,2,3,4 of the default cluster, all of htorc1, and 1,2,3,4,5 of htorc2.
+.BR 
+.TP 
+\fBOther\fR
+.IP 
+Lastly you can also specify a per cluster alternate username on the command line.  Simply preface the cluster name with the username, followed by an "@" symbol.  For example
+.BR 
+.LP 
+	cexec sgrundy@: mmanhunter@htorc:1\-5 xtorc: hostname
+.BR 
+.IP 
+That will log into the default cluster with the username "sgrundy", htorc with "mmanhunter", and xtorc with the current default username.  Alternate usernames specified on the command line override both the local username and the C3_USER environment variable.
+.SH "SEE ALSO"
+cexec(1), c3(1), cget(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-scale(5)

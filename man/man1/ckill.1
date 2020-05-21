@@ -1,0 +1,142 @@
+.\" ckill(1)
+.\" 
+.\" this file with 'groff -man -Tascii ckill.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "CKILL" "1" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBckill\fR \- A utility that runs 'kill' on each node of a cluster for a specified process name.
+
+
+.SH "SYNOPSIS"
+.LP 
+Usage: \fBckill\fR [OPTIONS] [MACHINE DEFINITIONS] process_name
+.SH "DESCRIPTION"
+.LP 
+\fBckill\fR executes 'kill' with the given signals on each cluster node.  Unlike 'kill', ckill must use the process name (similar to killall) as the process ID will most likely be different on the various nodes.  The root user has the ability to further indicate a specific user as the process owner, enabling root to kill a specific user's process without affecting like\-named processes owned by other users.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-\-help \-h\fR
+Display help message.
+
+.TP 
+\fB\-\-file \-f <filename>\fR
+Alternate cluster configuration file.  If one is not supplied then \fI/etc/c3.conf\fR will be used.
+
+.TP 
+\fB\-i\fR
+Interactive mode.  Ask once before executing.
+
+.TP 
+\fB\-\-head\fR
+Execute command on head node.  Does not execute on compute nodes.
+
+.TP 
+\fB\-\-signal \-s <signal>\fR
+Signal to send process.
+
+.TP 
+\fB\-\-user \-u <user>\fR
+Alternate process owner. (root only)
+
+.TP 
+\fB\-\-dry\-run \-n\fR
+Does not send commands to machines.
+
+.TP 
+\fB\-\-all\fR
+Execute command on all nodes in all clusters that are accessable.  When specifying \fB\-\-head\fR only the head nodes will participate.  This ignores the [MACHINE_DEFINITIONS] section.
+
+.TP
+\fB\-\-version \-v\fR
+Output version information.
+
+.SH "GENERAL"
+.LP 
+There are several basic ways to call ckill:
+.BR 
+
+.LP 
+1.  To kill a process (no signal sent):
+.IP 
+\fBckill a.out\fR
+.IP 
+This kills every process named a.out that the user owns
+
+.LP 
+2.  To execute a command on a subset of nodes on the default cluster (with signal 9):
+.IP 
+\fBckill \-s 9 :2\-6 daemon\fR
+.IP 
+This sends to the process named daemon the 9 signal on nodes 2, 3, 4, 5, 6.
+
+.LP 
+3.  To kill a process on a list of clusters with an alternate user:
+.IP 
+\fBckill \-u sgrundy cluster1: cluster2: a.out\fR
+.IP 
+This kills the processes named a.out that are owned by the user "sgrundy" on all the nodes in clusters cluster1: and cluster2:. (note: the \-u option is only valid for root)
+
+.LP 
+4.  To kill all processes of a given name on a list of clusters:
+.IP 
+\fBckill \-u ALL cluster1: cluster2: a.out\fR
+.IP 
+This kills the process named a.out on all the nodes in both clusters.  "ALL" is a reserved name meaning all users on a system.
+.SH "SETUP"
+.LP 
+See the C3 INSTALL file for installation instructions.  Also see C3_noderange for help on node ranges on the command line.  If using the scalable setup please see c3\-scale.
+.SH "ENVIRONMENT"
+.LP 
+C3_RSH
+.IP 
+By default, the C3 tools will use ssh to issue the remote commands.  If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh.
+.IP 
+For example, if you are using the bash shell you would do the following:
+.IP 
+\fBexport C3_RSH=rsh\fR
+.IP 
+Any program that behaves like rsh or ssh is acceptable.
+
+.LP 
+C3_PATH
+.IP 
+The default install path for C3 is /opt/c3\-5.  If you install C3 in an alternate location this variable must point to that installation.  For remote clusters C3 must be installed in the same directory on each cluster.
+.IP 
+For example, if you installed C3 in your home directory you might use the following:
+.IP 
+\fBexport C3_PATH=/home/sgrundy/c3\-5\fR
+.IP 
+
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+
+.LP 
+C3_USER
+.IP 
+By default, the C3 tools will use your local username to access a remote cluster.  If you wish to use a different default then set this variable to it.
+.IP 
+For example, this will change the example user from sgrundy to mmanhunter:
+.IP 
+\fBexport C3_USER=mmanhunter\fR
+.IP 
+.SH "FILES"
+.LP 
+\fB\fI/etc/c3.conf\fR\fR
+.IP 
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent.  The cluster configuration file of nodes may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf(5) man page for format.
+.SH "SEE ALSO"
+c3(1), cget(1), cexec(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5), c3\-scale(5)

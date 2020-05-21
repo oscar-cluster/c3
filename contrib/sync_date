@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# Simple script to synchronize the date and time on a set of machines.
+#
+
+curr_date=`/bin/date +%m/%d/%Y`
+curr_time=`/bin/date +%T`
+/opt/c3-5/cexec "date -s $curr_date; date -s $curr_time"

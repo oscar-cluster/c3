@@ -1,0 +1,124 @@
+.\" C3-scale(5)
+.\" 
+.\" this file with 'groff -man -Tascii c3-scale.5'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "C3-SCALE" "5" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBc3\-SCALE\fR \- How to configure and use C3 in its scaleable mode.
+
+.SH "SYNOPSIS"
+.LP 
+Using C3 in its scalable execution model is very similar to using C3 in the non\-scalable fashion.  Both the command line interface and the configuration file have the same syntax; only the semantics of the options has changed.  The use of C3 in its non\-scalable execution model is capable of controlling multiple clusters in a single file.  At this time when using the scalable execution model, C3 is only capable of interfacing with a single cluster.  However, one may use the indirect remote model while off the cluster and then use the scalable release on the target cluster(s).  This will allow one to interact with multiple large clusters simultaneously.
+.SH "CONFIGURATION FILE"
+.LP 
+cluster part1 {
+        node1
+        node[1\-8]
+ }
+
+cluster part2 {
+        node9
+        node[9\-16]
+ }
+
+cluster part3 {
+        node17
+        node[17\-24]
+ }
+
+cluster part4 {
+        node25
+        node[25\-32]
+ }
+
+cluster part5 {
+        node33
+        node[33\-40]
+ }
+
+cluster part6 {
+        node41
+        node[41\-48]
+ }
+
+cluster part7 {
+        node49
+        node[49\-56]
+ }
+
+cluster part8 {
+        node57
+        node[57\-64]
+ }
+.LP 
+While the configuration file for the scalable execution model is syntactically identical to the non\-scalable, the meaning of the positions have changed.  The basic concept is that a single large cluster may easily be broken into several smaller clusters.  The first decision a system administrator needs to make is how to logically partition the cluster.  Ideally the cluster should be partitioned as close to a perfect square as possible, in our main example a 64\-node cluster is divided into 8 8\-way clusters.  C3 easily handles up to 64 64\-way clusters (4096 nodes).
+.BR 
+.LP 	
+When a command is executed, it is "staged" on the node listed in the sub\-cluster block's headnode line.  Then the command is executed on each node in the respective staging nodes block.
+.BR 
+.LP 	
+In the above example each chunk of the cluster is defined as a direct remote cluster.  One may alternatively define each as an indirect cluster, but then each staging node must have local configuration file to that subcluster.  Using direct remote staging nodes is slightly slower but is much easier to maintain, while the indirect is faster but more difficult to maintain.
+.BR 
+.LP 
+One important decision to make is whether the staging node is included within its own list of responsible nodes.  C3 will either execute on the compute nodes or the head\-node, not both at the same time.  The separation has the convenience of separating the responsibilities, but requires more commands for a full cluster execution.  However, if a staging node lists itself in their responsibilities list, then a single command will run on the entire cluster.  The above example the sub\-cluster block includes the staging nodes in it's list of responsible nodes.  This is probably the way most users would want to see the cluster, not including it is more usefull to system administrators.
+.BR 
+.LP 
+Physical layout of the cluster may impact the ordering of the nodes.  Ideally each cluster block would be within a single switch, including the head node of that cluster block.  This is because intra\-switch communication is very fast.  For example, if each switch only contains 32 ports then each block should not contain more than 1 staging node and 31 compute nodes \- with each of those nodes physically connected to the same switch.  It is not as important that the staging nodes all be connected to the same switch as the head node used to initiate the C3 command, though it would also speed execution.  It is not recommended that each node service more than 64 nodes unless absolutely necessary.
+.SH "USAGE"
+.LP 
+These examples will assume that the staging node includes itself in the responsibilities list.  In the case where it is not included it would require an extra command so that the execution will take place on both the staging nodes and it's list of responsibilities.
+.BR 
+.LP 
+The most important option common throughout the C3 commands is the \-\-all option.  This option tells C3 to execute the given command on each and every cluster and node in the configuration file.  It is recommended that the most commonly used or perhaps all of the C3 command be aliased to "command \-\-all" for convenience.  The following command will push /etc/passwd to every node in the scalable cluster:
+.IP 
+\fBcpush \-\-all /etc/passwd\fR
+.LP 
+The other option is to explicitly list each sub\-cluster on the command line.  However, for large clusters this would be quite cumbersome if not impossible to do without human error.
+.BR 
+.LP 
+At this point using ranges on a scalable cluster is not as clean as using them on a non\-scalable cluster.  Because "node48" could be in any of the sub\-clusters, or "node35\-64" may cross several sub\-cluster boundaries.  These must be explicitly searched on and explicitly stated on the command line.  For example searching in the first scalable configuration file:
+.IP 
+\fBcname \-\-all node48 node35 node64\fR
+.LP 
+will return node 48 in part6 position 7, node35 in part5 position 1, node64 in part8 position 8.  To execute on node48 use:
+.IP 
+\fBcexec part6:7 hostname\fR
+.LP 
+To execute on 35\-64 use:
+.IP 
+\fBcexec part5:1\-7 part6: part7: part8: hostname\fR
+.SH "MISC"
+.LP 
+Two commands currently do not gain any benefit from the scalable execution model.  cpushimage will not function properly \- specifically it will fail.  Currently SystemImager, used by cpushimage, does not support staging of images on other machines.  However, is possible to create a staging node image that contains the standard nodes' image and then push that image to only to the staging nodes.  Next, tell each of the staging nodes to propagate that image to the nodes in their list of responsibilities.  This process will result in all nodes receiving their image.  While this gains the parallelism of the scalable execution model it takes a significant amount of disk space and is difficult to maintain.  The server must maintain three complete images; its own operating image, a staging nodes image, and a compute node's image.  These images must be maintained correctly or the entire cluster may have system errors as a result of a cpushimage.  For example: to get the first set of images:
+.TP 
+1
+Build compute nodes.
+.TP 
+2
+Build staging nodes.
+.TP 
+3
+Take compute node image on staging nodes.
+.TP 
+4
+Take staging node image on head\-node.
+.BR 
+.LP 
+This must be repeated for every change required in the stable image.  Next, to propagate an image out to the cluster will require:
+.IP 
+\fBcpushimage \-\-all \-\-head staging_image\fR
+.LP 
+This will update all the staging nodes with the image "staging_image" stored on the local machine.  Next, to push "node_image" to all the nodes in their respective staging node responsibilities list:
+.IP 
+\fBcpushimage \-\-all node_image\fR
+.LP 
+Here, it is extremely important that the staging nodes are not included in their lists of responsibilities.  The effect of cpushimage will be random if the staging node includes itself in its list of responsibilities.  The result will depend on when the process was started and when the image update is applied to the image storage area.  the new update will delete the information being synchronized during the rsync operation.
+.BR 
+.LP 
+The other command that will not benefit from the scalable execution model is cget.  cget will still function properly, however it will probably not gain much parallelism, as it is a gather operation with many machines communicating to a single machine.
+.SH "SEE ALSO"
+cexec(1), c3(1), cget(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5)

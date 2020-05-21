@@ -1,0 +1,128 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+
+
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+        CFLAGS += -O0
+else
+        CFLAGS += -O2
+endif
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+
+	touch configure-stamp
+
+
+build: build-stamp
+
+build-stamp: configure-stamp
+	dh_testdir
+
+    # Add here commands to compile the package.
+	# Yes this is pretty ugly but i want to be able to build the packages
+	# ugly but i want to be able to build the packages
+	$(CURDIR)/configure BINDIR=$(DESTDIR)/usr/bin
+	$(MAKE)
+        #docbook-to-man debian/c3.sgml > c3.1
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+    # Add here commands to clean up after the build process.
+	# Yes this is pretty ugly but i want to be able to build the packages
+	# for a svn check-out
+	$(CURDIR)/configure BINDIR=$(DESTDIR)/usr/bin
+	$(MAKE) clean DESTDIR=$(CURDIR)/debian/c3
+	rm -rf $(CURDIR)/debian/c3 $(CURDIR)/debian/c3-tmp
+
+	dh_clean
+
+install: build 
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+        # Add here commands to install the package into debian/c3.
+#	$(MAKE) install DESTDIR=$(CURDIR)/debian/c3-tmp
+	mkdir -p $(CURDIR)/debian/c3-c3cmd-filter
+	$(MAKE) install-c3cmd-filter DESTDIR=$(CURDIR)/debian/c3-c3cmd-filter \
+		BINDIR=$(CURDIR)/debian/c3-c3cmd-filter/usr/bin 
+
+	mkdir -p $(CURDIR)/debian/c3
+	$(MAKE) install-c3 DESTDIR=$(CURDIR)/debian/c3 \
+		BINDIR=$(CURDIR)/debian/c3/usr/bin \
+		MANDIR=$(CURDIR)/debian/c3/usr/share/man \
+		DOCDIR=$(CURDIR)/debian/c3/usr/share/doc/c3
+	rm -f $(CURDIR)/debian/c3/usr/bin/c3.spec \
+	      $(CURDIR)/debian/c3/usr/bin/ckillnode \
+          $(CURDIR)/debian/c3/usr/bin/c3.sh \
+          $(CURDIR)/debian/c3/usr/bin/c3.csh
+#	$(MAKE) install-contrib DESTDIR=$(CURDIR)/debian/c3 \
+#		BINDIR=$(CURDIR)/debian/c3/usr/bin
+
+	mkdir -p $(CURDIR)/debian/c3-ckillnode
+	$(MAKE) install-ckillnode DESTDIR=$(CURDIR)/debian/c3-ckillnode \
+		BINDIR=$(CURDIR)/debian/c3-ckillnode/usr/bin 
+
+	mkdir -p $(CURDIR)/debian/c3-contrib
+	$(MAKE) install-contrib DESTDIR=$(CURDIR)/debian/c3-contrib \
+		CONTRIBDIR=$(CURDIR)/debian/c3-contrib/usr/bin
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installexamples
+#       dh_install
+#       dh_installmenu
+#       dh_installdebconf
+#       dh_installlogrotate
+#       dh_installemacsen
+#       dh_installpam
+#       dh_installmime
+#       dh_installinit
+#       dh_installcron
+#       dh_installinfo
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+#       dh_perl
+#       dh_python
+#       dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure
+

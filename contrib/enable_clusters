@@ -1,0 +1,250 @@
+#!/usr/bin/env python2
+#
+# Script to add/enable SSH to a given cluster.
+#
+
+import sys
+sys.path.append( '/opt/c3-5' )
+import os, c3_com_obj, c3_file_obj, socket, re
+
+######## constants ####################################
+help_info = """adds keys for ssh to given cluster
+Usage: enable_cluster [OPTIONS] [MACHINE DEFINTIONS]
+
+	--help -h	= this screen
+	--file -f       = file containing list of ip's if
+                          one is not supplied then
+		          /etc/c3.conf will be used
+	--key -k	= type of key to push, valid arguments
+			  are "dsa" "rsa", none povided pushes all
+	
+	machine definitions are in the form of
+	clusterName:"""
+
+backslash = re.compile( r"\\" )
+#######################################################
+
+
+
+######### et default options  #########################
+head_node = 0			#execute only on head node
+filename = "/etc/c3.conf"	#default config file
+type = 0
+sshdir = os.path.expanduser( "~/" ) + ".ssh"
+dsa_key_base = sshdir + "/id_dsa"
+rsa_key_base = sshdir + "/identity"
+dsa_key = sshdir + "/id_dsa.pub"
+rsa_key = sshdir + "/identity.pub"
+dsa_key_file = "authorized_keys2"
+rsa_key_file = "authorized_keys"
+#######################################################
+
+
+######### internal variables ##########################
+cluster_from_file = {}
+#######################################################
+
+
+
+######### parse command line ##########################
+
+# first create one large string of the command 
+command_line_list = sys.argv[1:]
+command_line_string = ''
+for item in command_line_list:
+	command_line_string = '%s %s' % (command_line_string, item)
+
+# object used to parse command line
+c3_command = c3_com_obj.c3_command_line( command_line_string )
+ 
+# get first option
+try:
+	option = c3_command.get_opt()
+	file_set = 0
+        while option: # while more options
+                if (option == '-f') or (option == '--file'): # alternate config file
+			if not file_set:
+                        	filename = c3_command.get_opt_string()
+				file_set = 1
+			else:
+				print "only one file name can be specified."
+				sys.exit()
+		elif option == '-h' or option == "--help": # print help info
+			print help_info
+			sys.exit()
+		elif option == '--key' or option == '-k':
+			type = c3_command.get_opt_string()
+			if type == 'dsa':
+				type = 1
+			elif type == 'rsa':
+				type = 2
+			else:
+				print "invalid key type, rsa or dsa only valid types"
+				sys.exit()
+                else: # a catch all, option supplied not valid
+                        print "option ", option, " is not valid"
+			sys.exit()
+                option = c3_command.get_opt()
+except c3_com_obj.end_of_option: #quit parsing options
+        pass
+
+# create cluster object from command line 
+clusters = c3_com_obj.c3_cluster_list()
+ 
+clusters = c3_command.get_clusters()
+
+#######################################################
+
+
+#test if needed keys have been generated
+if not os.path.exists ( dsa_key ):
+        string_to_execute = "/usr/bin/ssh-keygen -b 512 -d -N \"\" -f " + dsa_key_base
+        os.system( string_to_execute )
+
+if not os.path.exists ( rsa_key ):
+        string_to_execute = "/usr/bin/ssh-keygen -b 512 -N \"\" -f " + rsa_key_base
+        os.system( string_to_execute )
+
+######### test if ssh or rsh ##########################
+try:
+	transport = os.environ[ 'C3_RSH' ]
+except KeyError:
+	transport = 'ssh'
+#######################################################
+
+
+######### make cluster list object from file ##########
+try: # open file & initialize file parser
+	file = c3_file_obj.cluster_def( filename )
+except IOError:
+	print "error opening file: ", filename
+	sys.exit()
+
+# note, someday need to change to only get clusters needed, need changes to the
+# file parser object for that, will be done in later versions
+
+try:
+	file.get_next_cluster() # set the default cluster (first cluster in list)
+	default_cluster = file.get_cluster_name()
+
+        while(1): #throws exception when no more clusters
+		c_name = file.get_cluster_name() #name of cluster being parsed
+		cluster_from_file[c_name] = {}
+		cluster_from_file[c_name]['external'] = file.get_external_head_node()
+		cluster_from_file[c_name]['internal'] = file.get_internal_head_node()
+		cluster_from_file[c_name]['nodes'] = None #list of node names from file
+		file.get_next_cluster() #repeat untill no more clusters
+except c3_file_obj.no_more_clusters:
+ 	pass
+except c3_file_obj.parse_error, error:
+        print error.description
+        print "somewhere around ", error.last
+	sys.exit()
+
+#######################################################
+
+
+######### execute command on each node in cluster
+
+
+
+# there are two main groups, local and remote clusters
+# in each of those groups there are direct and indirect
+# modes, that is every node specified or a "link". A link
+# on a local cluster is of course invalid.
+
+# right now the only way I know how to check if a cluster
+# is local is to use a "gethostbyname" and compare it
+# to the head node names (both internel and externel).
+# right now that is acceptable as many tools require 
+# the function to work correctly (ssh being one of them)
+# my want to think about a better way.
+
+#host_ip = socket.gethostbyname( socket.gethostname() )
+
+if clusters.clusters[0] ==  "/default": # if default cluster set correct cluster name
+	clusters.clusters[0] = default_cluster
+	clusters.node[default_cluster] = clusters.node["/default"]
+	del clusters.node["/default"]
+
+for cluster in clusters.clusters:
+
+	############ get machine names #############################
+	try: 
+		local_ip = socket.gethostbyname( socket.gethostname() )
+	except socket.error:
+		print "Can not resolve local hostname"
+		sys.exit()
+	try:
+		int_ip = socket.gethostbyname( cluster_from_file[cluster]['internal'] )
+	except socket.error:
+		int_ip = ""
+	try:
+		ext_ip = socket.gethostbyname( cluster_from_file[cluster]['external'] )
+	except socket.error:
+		ext_ip = ""
+	except TypeError:
+		ext_ip = int_ip
+	############################################################
+	
+	if cluster_from_file[cluster]['external']: # if a direct cluster
+		if ext_ip == local_ip or int_ip == local_ip: # if a local cluster
+			print "local cluster, doing nothing"
+		else: # remote cluster
+			if ext_ip == "": # error condition
+				print "Can not resolve ", cluster_from_file[cluster]['external']
+				sys.stdout.flush()
+			else:
+				if type == 0 or type == 1: #dsa key
+					tempname = str(os.getpid()) + str(os.getuid()) + dsa_key_file
+					string_to_execute = "scp " + dsa_key + " " + ext_ip + ":/tmp/" + tempname
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + ext_ip + " \'cat /tmp/" + tempname + " >> " + sshdir + "/" + dsa_key_file +" ;chmod 644 " + sshdir + "/" + dsa_key_file + " \'"
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + ext_ip + " /bin/rm /tmp/" + tempname
+					os.system( string_to_execute )
+					
+				if type == 0 or type == 2: #rsa key
+					tempname = str(os.getpid()) + str(os.getuid()) + rsa_key_file
+					string_to_execute = "scp " + rsa_key + " " + ext_ip + ":/tmp/" + tempname
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + ext_ip + " \'cat /tmp/" + tempname + " >> " + sshdir + "/" + rsa_key_file +" ;chmod 644 " + sshdir + "/" + rsa_key_file + " \'"
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + ext_ip + " /bin/rm /tmp/" + tempname
+					os.system( string_to_execute )
+	else: # indirect clusters
+		if int_ip == local_ip:  # can not have a indirect local cluster since if your default cluster
+					# is local you would generate a circular reference
+			print "error local cluster"
+			sys.stdout.flush()
+		else: # remote indirect cluster
+			if int_ip == "": # error condition
+				print "Can not resolve hostname ", cluster_from_file[cluster]['internal']
+				sys.stdout.flush()
+			else:
+				if type == 0 or type == 1: #dsa key
+					tempname = str(os.getpid()) + str(os.getuid()) + dsa_key_file
+					string_to_execute = "scp " + dsa_key + " " + int_ip + ":/tmp/" + tempname
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + int_ip + " \'cat /tmp/" + tempname + " >> " + sshdir + "/" + dsa_key_file +" ;chmod 644 " + sshdir + "/" + dsa_key_file + " \'"
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + int_ip + " /bin/rm /tmp/" + tempname
+					os.system( string_to_execute )
+					
+				if type == 0 or type == 2: #rsa key
+					tempname = str(os.getpid()) + str(os.getuid()) + rsa_key_file
+					string_to_execute = "scp " + rsa_key + " " + int_ip + ":/tmp/" + tempname
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + int_ip + " \'cat /tmp/" + tempname + " >> " + sshdir + "/" + rsa_key_file +" ;chmod 644 " + sshdir + "/" + rsa_key_file + " \'"
+					os.system( string_to_execute )
+
+					string_to_execute = "ssh " + int_ip + " /bin/rm /tmp/" + tempname
+					os.system( string_to_execute )
+

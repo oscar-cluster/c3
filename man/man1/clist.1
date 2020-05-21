@@ -1,0 +1,85 @@
+.\" clist(1)
+.\" 
+.\" this file with 'groff -man -Tascii cexec.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "Clist" "1" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBclist\fR \- A utility that lists the names and types of clusters in the cluster configuration file.
+
+
+
+.SH "SYNOPSIS"
+.LP 
+Usage: \fBclist\fR [OPTIONS]
+.SH "DESCRIPTION"
+.LP 
+\fBclist\fR is a utility that lists the names and types of clusters in a cluster configuration file.  The different types of clusters are as follows:
+.TP 
+\fIDirect Local\fR
+All the information about the cluster is known before runtime, and the head node is the machine on which the command is run.
+.TP 
+\fIDirect Remote\fR
+All the information about the cluster is known before runtime, and the head node is not the machine from which the command i.s run
+.TP 
+\fIindirect remote\fR
+Only the head node of the cluster is known at runtime, and it is not the machine from which the command is run.
+.LP 
+For more information on these three types of clusters see the c3.conf(5) help file.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-\-help \-h\fR
+Display help message.
+
+.TP 
+\fB\-\-file \-f <filename>\fR
+Alternate cluster configuration file.  If one is not supplied then \fI/etc/c3.conf\fR will be used.
+
+.TP
+-fB\-\-version \-v\fR
+Output version information.
+
+.SH "GENERAL"
+.LP 
+There are two ways to call clist:
+.BR 
+
+.LP 
+1.  To list all clusters from the default configuration file:
+.IP 
+\fBclist\fR
+.IP 
+This prints each cluster and its type, one per line.
+
+.LP 
+2.  To list all clusters from an alternate configuration file:
+.IP 
+\fBclist \-f alt.cluster\fR
+.IP 
+This prints each cluster and its type, one per line.
+.SH "SETUP"
+.LP 
+See the C3 INSTALL file for installation instructions.
+.SH "ENVIRONMENT"
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+.SH "FILES"
+.LP 
+\fB\fI/etc/c3.conf\fR\fR
+.IP 
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent.  The cluster configuration file of nodes may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf(5) man page for format.
+.SH "SEE ALSO"
+c3(1), c3(1), cget(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), cexec(1), c3.conf(5), c3\-range(5), c3\-scale(5)

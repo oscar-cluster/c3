@@ -1,0 +1,149 @@
+
+	C3 version 5:   Cluster Command & Control Suite
+	  Oak Ridge National Laboratory, Oak Ridge, TN,
+	Authors: M.Brim, R.Flanery, G.A.Geist, B.Luethke, S.L.Scott
+          Thomas Naughton, Geoffroy Vallee, Wesley Bland
+
+          Copyright (c) 2000-2013    Oak Ridge National Laboratory
+                                     All rights reserved.
+
+
+Version 2.7
+
+	Changed tool names from cl_*(t) to c*(s). 
+
+Version 2.7.1
+
+	Added C3 man page (man c3). 
+	Fixed file open error message bug in cpush(s) that misreported that 
+		the node list could not be opened, when actually it was the 
+		list of files to be pushed which could not be opened. 
+
+Version 2.7.2
+
+	C3 now available as an RPM 
+	C3 is now installed in /opt to conform with the Linux Standards Base 
+		(LSB) Filesystem Hierarchy Standard (FHS) 
+	Updated cpushimage to use SystemImager v1.5.0 
+	C3_RSH environment variable should now be set to the path to the 
+		binary that C3 should use instead of the default ssh. 
+		Previously, C3_RSH was set to 1 if the user wanted to use rsh
+		instead of ssh. 
+
+Version 3.0
+
+	Total rewrite of codebase
+		using python 2.x
+		new config file format
+		new command line format
+		dropped cps
+		dropped serial versions of everthing but cexec
+
+Version 3.1
+	
+	changed "#!/usr/local/bin/python" to use "/usr/bin/env pyhton2" for 
+		portability
+	fixed bug where temporary filename stays around (see version 3.0's 
+		known bug list)
+	when using the cpush -l option if you had more than one space between
+		the source and destination cpush failed, you can now have
+		any amount and type of white space
+	when using cpush with the -l option if there is a blank line execution fails,
+		the blank line is now skipped
+	now only reads the clusters specified on the command line from the 
+		configuration file
+	addedd --all option to all the tools
+	when using the c3_com_obj.get_clusters() it changed global values instead of local
+		values, usefull if using the libraries for your own scripts
+	cname can now search multiple names in one command
+	when using a direct remote cluster and not using ssh for comminication the scripts
+		would still use ssh in one call
+	added a "contrib" section of unsupported example scripts (see README
+		in contrib directory)
+	added c3 command line parser and file parser documentation in the contrib section.
+	added the --pipe option, should make it easier to pipe cexec commands
+	changed the directory structure of the man pages
+
+Version 3.1.1
+	
+	--pipe did not handle single line output correctly, now fixed.
+	cexec now sorts stderr along with stdout
+	*^C no longer prints call stack to screen
+
+Version 3.1.2
+	
+	fixed cexec where output from a cexec command that is over the system buffer length would hang
+	when using cpush with the --head option other command line options were not 
+		executed correctly
+	fixed a problem where --blind didn't apply when using a file list
+	Specifying a cluster on the command line that doesn't exist now gives an appropriate
+		error message and tries the next cluster.
+	changed the --blind option in cpush to use "rm -f" instead of "rm -rf". This could cause entiere
+		directories to be erase (C3 doen not support directoies with cpush)
+	when using cnum with an indirect remote cluster it actually executed cname
+	added some documentation to the parsing internals for other people to use.
+	when using -f or --file with cpush it looked for the alternate configuration file on remote cluster (it
+		should have looked for /etc/c3.conf).
+	added a --all option to cnum
+
+Version 4.0
+	each cluster runs in its own thread, this allows scalable runs of C3 (see README.scalable)
+	use of supercluster groups for scalability
+	ability to run commands as an alternate user per cluster
+	ability to set a different default path to remotly find the c3 commands per user (allows the scalable
+		cluster to run entierly in user space)
+	ability to specify a different default configuration file per user. (NOT DONE!!!!!!)
+	fixed a bug where :torc: would match both the defalut cluster and torc
+		instead of being an error
+	ability to run as a different user per cluster (see c3-range(5) man page)
+	made a few error messages more descriptive
+	fixed a bug where if an index on the command line was out of range
+		execution quit, it now ignores.
+
+Version 4.1
+    Include a new installation mechanism based on a Makefile
+    Reduced cpush default verbosity, see C3_VERBOSE EnvVar (from Erich Focht)
+
+Version 5.0
+    Internal only release, skipped to v5.0.1 for packaging/distribution reasons.
+
+Version 5.0.1 
+    cpush now requires a destination as well as a source (see man pages)
+    cpush now supports the use of wildcards on command line (see man pages)
+    Changed the way versioning is handled in the utilities and added
+       '--version' option.
+    Improved error code handling for the tools.
+    Created two new APITests to test return codes for cexec.
+    Created new APITests for cpush and updated the old ones to include the 
+       new changes.
+    Do not install c3 in /opt/c3-x anymore but directly on the system (e.g.,
+       binaries in /usr/bin).
+    Put error codes and default location into a seperate module (include) file
+    Added support to crm for deleting multiple files at once.
+    Improved internal build system, and added automation of release process.
+    Fix for MANPATH (Bernard Li)
+
+Version 5.1.0 
+    Fix the man path for Debian packages.
+    Include a new binary packages for contrib.
+    Update the contrib/c3_conf_manager script so we can add and remove nodes from a given cluster
+    Fix bug causing large output to hang cexec - thanks Erik Jacobson (see Ticket#17)
+    Require Python >= 2.4, migrate to subprocess module (see Ticket#16)
+    Fix ckillnode pid lookup with long process name (see Ticket#15)
+    Update copyright stamps to span proper years (2000-2011)
+
+Version 5.1.1 
+    Fix a problem in contrib/c3_conf_manager where we were calling delete_cluster instead of del_cluster.
+
+Version 5.1.2 
+    Fix a permissions issue on the contrib files.
+
+Version 5.1.3 (not yet released)
+    Recreate the c3-profiled RPM when running 'make rpm'
+    Install all binaries in @prefix@/usr/bin, and update the profile scripts accordingly
+    Install the c3cmd filter scripts in the appropriate directory
+    Fix usage and del/addnode error with contrib/c3_conf_manager (ticket#34)
+    Add version flag to contrib/c3_conf_manager
+    Update autotool scripts and related files for more modern syntax
+    Update various bits with autotool/scripts for RPM compatible versions
+    Update AUTHOR file to indicate MikeB is back in town!

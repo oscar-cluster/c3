@@ -1,0 +1,128 @@
+.\" crm(1)
+.\" 
+.\" this file with 'groff -man -Tascii cexec.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "CRM" "1" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBcrm\fR \- A utility that deletes files from each cluster node. 
+.SH "SYNOPSIS"
+.LP 
+Usage: \fBcrm\fR [OPTIONS] [MACHINE DEFINITIONS] pattern(s)
+.SH "DESCRIPTION"
+.LP 
+\fBcrm\fR is a utility that deletes files or directories specified by a given pattern from each cluster node.  Be careful running this as root because there is no confirmation before a delete.  crm uses /bin/rm to delete the files so the same warnings that go for 'rm' apply here also.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-\-help \-h\fR
+Display help message.
+
+.TP 
+\fB\-i\fR
+Interactive mode.  Ask once before executing
+
+.TP 
+\fB\-r \-R\fR
+Recursive delete.
+
+.TP 
+\fB\-v\fR
+Verbose mode.
+
+.TP 
+\fB\-o\fR
+Force delete. (equivalent to \-f in rm)
+
+.TP 
+\fB\-\-file \-f <filename>\fR
+Alternate cluster configuration file.  If one is not supplied then \fI/etc/c3.conf\fR will be used.
+
+.TP 
+\fB\-\-head\fR
+Execute command on head node.  Does not execute on compute nodes.
+
+.TP 
+\fB\-\-dry\-run \-n\fR
+Does not send commands to machines.
+
+.TP 
+\fB\-\-all\fR
+Execute command on all nodes in all clusters that are accessable.  When specifying \fB\-\-head\fR only the head nodes will participate.  This ignores the [MACHINE_DEFINITIONS] section.
+
+.TP
+\fB\-\-version \-v\fR
+Output version information.
+
+.SH "GENERAL"
+.LP 
+There are several basic ways to call crm:
+.BR 
+
+.LP 
+1.  To remove a single file from the default cluster:
+.IP 
+\fBcrm filename\fR
+
+.LP 
+2.  To remove several files on multiple clusters:
+.IP 
+\fBcrm cluster2:2\-6 cluster3: '*.obj'\fR
+.IP 
+This removes *.obj (notice the ' it prevents the shell from expanding the wildcard) from all of cluster3 an nodes 2, 3, 4, 5, and 6 from cluster 2
+.SH "SETUP"
+.LP 
+See the C3 INSTALL file for installation instructions.  Also see C3_noderange for help on node ranges on the command line.  If using the scalable setup please see c3\-scale
+.SH "ENVIRONMENT"
+.LP 
+C3_RSH
+.IP 
+By default, the C3 tools will use ssh to issue the remote commands.  If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh.
+.IP 
+For example, if you are using the bash shell you would do the following:
+.IP 
+\fBexport C3_RSH=rsh\fR
+.IP 
+Any program that behaves like rsh or ssh is acceptable.
+
+.LP 
+C3_PATH
+.IP 
+The default install path for C3 is /opt/c3\-5.  If you install C3 in an alternate location this variable must point to that installation.  For remote clusters C3 must be installed in the same directory on each cluster.
+.IP 
+For example, if you installed C3 in your home directory you might use the following:
+.IP 
+\fBexport C3_PATH=/home/sgrundy/c3\-5\fR
+.IP 
+
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+
+.LP 
+C3_USER
+.IP 
+By default, the C3 tools will use your local username to access a remote cluster.  If you wish to use a different default then set this variable to it.
+.IP 
+For example, this will change the example user from sgrundy to mmanhunter:
+.IP 
+\fBexport C3_USER=mmanhunter\fR
+.IP 
+.SH "FILES"
+.LP 
+\fB\fI/etc/c3.conf\fR\fR
+.IP 
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent.  The cluster configuration file of nodes may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf(5) man page for the format.
+.SH "SEE ALSO"
+c3(1), cget(1), ckill(1), cpush(1), cpushimage(4), cexec(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5), c3\-range(5)

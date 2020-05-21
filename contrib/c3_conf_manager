@@ -1,0 +1,429 @@
+#!/usr/bin/perl
+
+# c3_conf_manager
+#
+# Written by Jason Brechin 03/25/03
+
+# Updated by Geoffroy R. Vallee
+# Updated by Thomas Naughton
+# Copyright (C) 2010-2013	Oak Ridge National Laboratory
+#                    		Geoffroy Vallee <valleegr at ornl dot gov>
+#                    		All rights reserved.
+
+use strict;
+use Carp;
+
+use Getopt::Long;
+Getopt::Long::Configure ("pass_through");
+
+my $SCRIPT      = "c3_conf_manager";
+my $SVN_VERSION = sprintf "r%d", q$Revision: 263 $ =~ /(\d+)/g;
+my $VERSION     = "v1.0 ($SVN_VERSION)";
+my $add         = 0;
+my $add_node    = undef;
+my $delete      = 0;
+my $del_node    = undef;
+my @nodes       = ();
+my $cluster     = '';
+my $zero        = 0;
+my $file        = 0;
+my $list;
+my $hostname    = `hostname`;
+my $target_cluster     = undef;
+
+my $c3conf = '/etc/c3.conf';
+if (defined($ENV{C3_CONF})) {
+	# Override default "c3.conf" based on C3_CONF EnvVar
+	$c3conf = $ENV{C3_CONF};
+}
+
+sub show_version () {
+  print "$SCRIPT $VERSION\n";
+  exit 0;
+}
+
+sub usage () {
+  print "$SCRIPT $VERSION\n";
+  print "$0\n";
+  print 'Written by Jason Brechin <brechin@ncsa.uiuc.edu>' . "\n";
+  print "Maintained by Geoffroy Vallee <valleegr at ornl dot gov>\n\n";
+  print "--help\t\t\tUsage Information (this)\n";
+  print "--add <name>\t\tAdds cluster with given name\n";
+  print "--rm <name>\t\tRemoves cluster with given name\n";
+  print "--addnode <nodename>\tAdd a node to a cluster \n" 
+        . "                    \tIf the node was marked dead, the node is\n"
+        . "                    \tmarked back to alive.\n"
+        . "                    \t(MUST BE USED WITH the --cluster option)\n";
+  print "--delnode <nodename>\tRemove a node from a cluster, (i.e., mark as dead)\n"
+        . "                  \t(MUST BE USED WITH the --cluster option)\n";
+  print "--list <cluster>\tLists nodes in cluster\n";
+  print "--listclusters\t\tLists defined clusters\n";
+  print "--zero\t\t\tUse 0-indexing\n";
+  print "--version\t\tPrint version information\n";
+  exit 1;
+}
+
+&GetOptions(
+    'help|h|?' 	    => \&usage,
+    'addcluster=s'  => \$add,
+    'addnode=s'     => \$add_node,
+    'add=s'	        => \$add,
+    'cluster=s'     => \$target_cluster,
+    'rmcluster=s'	=> \$delete,
+    'delnode=s'     => \$del_node,
+    'rm=s'	        => \$delete,
+    'zero|0|z'	    => \$zero,
+    'f=s'           => \$file,
+    'list:s'	    => \$list,
+    'listclusters:s'=> \$list,
+    'l:s'		    => \$list,
+    'version|v'     => \&show_version,
+#  '<>'		=> sub { push @nodes, @ARGV; },
+);
+
+@nodes = @ARGV;  # ARGV will now have all node names
+
+if ($file && -f $file) {
+    $c3conf = $file;
+}
+
+# This function parses the c3 config file and check if a specific cluster is
+# defined.
+# In: cluster_names, cluster to look for.
+#     nodes, list of nodes composing the cluster (if the cluster is defined in
+#            the config file.
+# Return: 1 if the cluster is defined in the configuration file, 0 if not, -1
+#         if error.
+sub is_cluster_defined ($$) {
+    my ($cluster_name, $nodes) = @_;
+
+    # First we read the file
+    open (C3CONF, $c3conf) 
+        or (carp "ERROR: Couldn't open $c3conf", return -1);
+    my @c3file = <C3CONF>;
+    close(C3CONF);
+
+    # Now we look for the target cluster
+    my $i = 0;
+    while ($i < scalar (@c3file)) {
+        if ($c3file[$i] =~ /cluster\s*(\S*)\s*\{/g) { #cluster begin
+            if ($1 eq $cluster_name) {
+                $i = $i+3; # the two first lines are meta-data
+                # TODO: Should check $zero (to honour zero-indexing)! 
+                while ($i < scalar (@c3file)) {
+                    my $line = $c3file[$i];
+                    chomp ($line);
+                    if ($line eq "}") {
+                        $i = scalar (@c3file); # condition to stop since we
+                                               # reached the end of the block
+                    } else {
+                        if ($line =~ /\s*(\w*)/g) {
+                            push (@$nodes, $1);
+                        } 
+                    }
+                    $i++;
+                }
+                return 1;
+            }
+        }
+        $i++;
+    }
+
+    return 0;
+}
+
+# This function simply checks is a element is part of a given array.
+#
+# In: elt, element to look for.
+#     array, reference to the array we have to parse.
+# Return: 1 if the element is member of the array, 0 if not, -1 if error.
+sub is_elt_in_array ($$) {
+    my ($elt, $array) = @_;
+
+    if (!defined $elt || !defined $array) {
+        carp "ERROR: Invalid argument";
+        return -1;
+    }
+
+    chomp ($elt);
+
+    foreach my $e (@$array) {
+        chomp ($e);
+        if ($e eq $elt || $e =~ /dead\s+$elt/) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+# This function checks if a given node is marked as dead.
+#
+# In: node, the node we are looking for.
+#     $nodes, reference to an array representing the list of nodes of a given
+#             cluster; this array is typically set by the is_cluster_defined
+#             function.
+# Return: -2 if error, -1 if the node is not marked as dead in the config file,
+#         the line number of the node in the config file if the node is marked
+#         dead. 
+sub is_node_marked_dead ($$) {
+    my ($node, $nodes) = @_;
+
+    if (!defined $node || !defined $nodes) {
+        carp "ERROR: Invalid argument";
+        return -2;
+    }
+
+    chomp ($node);
+
+    my $i = 0;
+    foreach my $n (@$nodes) {
+        if ($n =~ /dead\s+$node/) {
+            return $i;
+        }
+        $i++
+    }
+
+    return -1;
+}
+
+# Add a cluster (and the associated nodes) to the config file (it creates the
+# appropriate block and so on).
+#
+# In: cluster, cluster name to add.
+#     nodes, reference to an array representing all the nodes of the cluster.
+#     conffile, path to the c3 config file that needs to be updated.
+# Return: 0 if success, -1 else.
+sub add_cluster ($$$) {
+    my ($cluster, $nodes, $conffile) = @_;
+
+    if (-e "$conffile") { 
+        open(C3OUT, ">>$conffile"); 
+    } else { 
+        open(C3OUT, ">$conffile"); 
+    }
+    print C3OUT "cluster $cluster {\n";
+    print C3OUT "\t$hostname";
+    unless ($zero) { 
+        print C3OUT "\tdead remove_for_0-indexing\n";
+    }
+    foreach my $node (@$nodes) {
+        print C3OUT "\t$node\n";
+    }
+    print C3OUT "}\n";
+    close C3OUT;
+
+    return 0;
+}
+
+# Delete a given cluster from a c3 config file.
+#
+# In: cluster, name of the cluster to delete.
+#     conffile, path of the c3 config file to update.
+#
+# NOTE: Currently we're lax in retval, if cluster not
+#       exist it doesn't bark or warn via retval.
+#
+# Return: 0 if success, -1 (error).
+sub del_cluster ($$) {
+    my ($cluster, $conffile) = @_;
+    my $tmp_cluster = "";
+
+    open C3CONF, $conffile 
+        or (carp "ERROR: Could not open $conffile", return -1);
+    my @c3file = <C3CONF>;
+    close(C3CONF);
+    !system("cp $conffile $conffile.bak") 
+        or (carp "ERROR: Could not create backup\n", return -1);
+    open(C3OUT, ">$conffile");
+    my $incluster = 0;
+    foreach my $line (@c3file) {
+        if (!$incluster && $line =~ /^\s*cluster\s*(\S*)\s*\{/g) {#cluster begin
+            $tmp_cluster = $1;
+            if ($tmp_cluster eq $cluster) {
+                #print "Cluster to delete found\n";
+                $incluster = 1;
+                $cluster = $1;
+            } else {
+                $incluster = 0; 
+                print C3OUT "$line";
+            }
+        } elsif ( $incluster == 1 && $line =~ /\}/g) { #cluster end
+            $incluster = 0;
+        } elsif ( $incluster == 0 ) { #out cluster
+            print C3OUT "$line";
+        }
+    }
+    close(C3CONF);
+
+    return 0;
+}
+
+# Push a list of nodes to a cluster definition within a c3 config file. The idea
+# is here to get the cluster nodes via an array, update that array and push it
+# back to the config file. This function actually pushed an array of nodes to a
+# cluster definition. Note the nodes may include the string "dead" for the nodes
+# who are not active anymore.
+#
+# In: cluster: cluster name to update.
+#     nodes: reference to an array representing the cluster nodes.
+# Return: 0 if success, -1 else.
+sub push_node_list_to_file ($$) {
+    my ($cluster, $nodes) = @_;
+    if (del_cluster ($cluster, $c3conf)) {
+        carp "ERROR: Impossible to remove cluster $cluster from $c3conf";
+        return -1;
+    }
+    if (add_cluster ($cluster, $nodes, $c3conf)) {
+        carp "ERROR: Impossible to add cluster $cluster to $c3conf";
+        return -1;
+    }
+    return 0;
+}
+
+if ( $add && $delete ) { 
+  die "ERROR: Can't specify a cluster to add and remove"; 
+}
+if ( defined($list) && ($add || $delete || $add_node || $del_node) ) { 
+  die "ERROR: Can't list AND add/delete"; 
+}
+if ( $add ) { 
+  $delete = $add; 
+}
+
+if ($add_node && -e "$c3conf") {
+    if (!defined $target_cluster || $target_cluster eq "") {
+        die "ERROR: Cluster is not specified, impossible to add nodes";
+    } 
+
+    if (scalar (@nodes)) {
+        print "[WARN] Arguments defined but ignored";
+    }
+
+    # Check if the file has a block for the target cluster
+    my @cluster_nodes = ();
+    if (is_cluster_defined ($target_cluster, \@cluster_nodes) != 1) {
+        die "ERROR: Impossible to find $target_cluster in $c3conf";
+    }
+
+    # Check if the node is already defined
+    my $rc = is_elt_in_array ($add_node, \@cluster_nodes);
+    if ($rc < 0) {
+         die "ERROR: Node is already specified or error when getting data";
+    } elsif ($rc == 0) {
+        # Add the node
+        push (@cluster_nodes, $add_node);
+        if (push_node_list_to_file ($target_cluster, \@cluster_nodes)) {
+            die "ERROR: Impossible to push nodes to config file";
+        }
+    } else {
+        my $pos = is_node_marked_dead ($add_node, \@cluster_nodes);
+        if ($pos >= 0) {
+            print "Node marked dead, mark it back to alive\n";
+            $cluster_nodes[$pos] = $add_node;
+            print join (", ", @cluster_nodes) . "\n";
+            if (push_node_list_to_file ($target_cluster, \@cluster_nodes)) {
+                die "ERROR: Impossible to push nodes to config file";
+            }
+        }
+    }
+}
+
+if ($del_node && -e "$c3conf") {
+    if (!defined $target_cluster || $target_cluster eq "") {
+        die "ERROR: Cluster is not specified, impossible to delete nodes";
+    }
+
+    if (scalar (@nodes)) {
+        print "[WARN] Arguments defined but ignored";
+    }
+
+    # Check if the file has a block for the target cluster
+    my @cluster_nodes = ();
+    if (is_cluster_defined ($target_cluster, \@cluster_nodes) != 1) {
+        die "ERROR: Impossible to find $target_cluster in $c3conf";
+    }
+
+    # Check if the node is already defined
+    my $rc = is_elt_in_array ($del_node, \@cluster_nodes);
+    if ($rc < 0) {
+         die "ERROR: Node is already specified or error when getting data";
+    } elsif ($rc == 1) {
+        my $i = 0;
+        chomp ($del_node);
+        while ($i < scalar (@cluster_nodes)) {
+            if ($cluster_nodes[$i] eq $del_node) {
+                $cluster_nodes[$i] = "dead $del_node";   
+                if (push_node_list_to_file ($target_cluster, \@cluster_nodes)) {
+                    die "ERROR: Impossible to push nodes to config file";
+                }
+            }
+            $i++;
+        }
+    }
+}
+
+if ( $delete && -e "$c3conf" ) {
+	if (del_cluster ($delete, $c3conf)) {
+        die "ERROR: Impossible to delete cluster $delete";
+    }
+}
+
+if ($add) {
+	if (add_cluster ($add, \@nodes, $c3conf)) {
+        die "ERROR: Impossible to add cluster $add";
+    }
+}
+
+if (defined($list) && -e "$c3conf") {
+  open(C3IN, "$c3conf") or die "Couldn't open $c3conf";
+  my @c3file = <C3IN>;
+  close C3IN;
+  my $incluster = 0;
+  my $host = '';
+  my @clusters;
+  if ($list eq '') {
+    foreach my $line (@c3file) {
+      if (!$incluster && $line =~ /^\s*cluster\s*(\S*)\s*\{/g) {
+	push @clusters, $1;
+	$incluster = 1;
+      } elsif ( $incluster && $line =~ /\}/g) { #cluster end
+	$incluster = 0;
+      } else  { 
+        ; #do nothing
+      }
+    } 
+  } else {
+    foreach my $line (@c3file) {
+      if (!$incluster && $line =~ /^\s*cluster\s*(\S*)\s*\{/g) { #cluster begin
+        $incluster = 1;
+        $cluster = $1;
+        if ( $cluster ne $list ) { 
+          $incluster = 0;
+        }
+      } elsif ( $incluster && $line =~ /\}/g) { #cluster end
+        $incluster = 0;
+      } elsif ( $incluster && !$host ) { #getting C3 host
+        $host = $line;
+      } elsif ( $incluster && $line =~ /^\s*dead/ ) { #dead node
+        ; #do nothing
+      } elsif ( $incluster ) { #in cluster, not end
+        print "$line";
+      } else { #outside cluster
+        ; #do nothing
+      }
+    }
+  }
+  if ($list ne '' && !$host) { 
+    exit 1; 
+  } elsif ($list eq '') {
+    if (scalar(@clusters)) {
+      print scalar(@clusters);
+      print " entries:\n@clusters\n";
+    } else { 
+      print "No clusters!"; 
+    }
+  } else { 
+    exit 0; 
+  }
+}

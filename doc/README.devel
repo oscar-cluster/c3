@@ -1,0 +1,62 @@
+
+Overview
+--------
+This contains C3 developer oriented information.   There is more
+documentation in the 'doc/' and 'man/' directories, which includes 
+user/administrator oriented information.
+
+
+C3 Documentation
+----------------
+For more detailed C3 documentation, please refer to files in the 'doc/'
+directory.
+
+
+Creation of Debian packages
+---------------------------
+To build the C3 Debian packages from an SVN check-out, just type:
+
+   ./autogen.sh && ./configure && make clean && make dist
+
+This command creates a tarball of C3. Then copy and untar this tarball 
+in a temporary location that will be used to create the Debian package. 
+
+For instance, with a v5.0 tarball, just type:
+
+   tar -zxf c3-5.0.tar.gz -C /tmp
+
+Finally execute the following command to create the Debian package.
+(Note, this can be run from a standard user account.)
+
+   dpkg-buildpackage -rfakeroot -us -uc
+
+All Debian packages will be automatically created.  Please, also update the
+changelog if needed (the dch tool can help you for that).
+
+
+
+Trac / Subversion
+-----------------
+When fixing/closing a bug in the Trac repository, 
+(https://bison.csm.ornl.gov/trac/c3/), you should:
+
+ 1) include the Trac bug number in the SVN commit message
+ 2) include the SVN changeset number in the Trac comments
+
+
+For example: 
+ * When fixing bug number '12' do something like the following 
+   in the Subversion commit msg (mention bug# early in log msg) 
+
+   # Subversion commit comment
+   $ svn ci -m "+ Fixes #12 - problem in c3.csh when env vars not already exist"
+
+
+ * When closing bug number '12' in Trac, add a comment with
+   the Subversion changeset (e.g., r166) that contains the fix, e.g.,
+
+       "Fixed in [166]."
+   
+   Then set the 'Action' to the proper value, e.g., "resolve as: fixed".
+
+

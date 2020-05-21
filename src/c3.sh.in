@@ -1,0 +1,11 @@
+# $Id: c3.sh.in 259 2011-06-20 15:47:34Z tjn $
+
+if ! echo $PATH | grep -q "@prefix@/usr/bin" ; then
+  PATH="$PATH:@prefix@/usr/bin"
+fi
+
+if ! echo $MANPATH | grep -q "@prefix@/doc/man" ; then
+  MANPATH="$MANPATH:@prefix@/doc/man/"
+fi
+
+# vim:tabstop=4:shiftwidth=4:noexpandtab:textwidth=76

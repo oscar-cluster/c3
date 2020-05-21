@@ -1,0 +1,127 @@
+.\" cget(1)
+.\" 
+.\" this file with 'groff -man -Tascii cget.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "CGET" "1" "5.0" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fBcget\fR \- A utility that retrieves a specified file from each node of a cluster and places it into the specified target directory.
+
+.SH "SYNOPSIS"
+.LP 
+Usage: \fBcget\fR [OPTIONS] [MACHINE DEFINITIONS] source [target]
+.SH "DESCRIPTION"
+.LP 
+\fBcget\fR is a utility that retrieves the given file from each node and places them in the the specified directory.  Since all files will originally have the same name, an underscore and the cluster name, another underscore and the node's IP or hostname is appended to each filename.  Note that cget ignores subdirectories and links.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-\-help \-h\fR
+Display help message.
+
+.TP 
+\fB\-\-file \-f <filename>\fR
+Alternate cluster configuration file.  If one is not supplied then \fI/etc/c3.conf\fR will be used.
+
+.TP 
+\fB\-i\fR
+Interactive mode.  Ask once before executing
+
+.TP 
+\fB\-\-head\fR
+Execute command on head node.  Does not execute on compute nodes if specified.
+
+.TP 
+\fB\-\-dry\-run \-n\fR
+Does not send commands to machines.
+
+.TP 
+\fB\-\-all\fR
+Execute command on all nodes in all clusters that are accessable.  When specifying \fB\-\-head\fR only the head nodes will participate.  This ignores the [MACHINE_DEFINITIONS] section.
+
+.TP
+\fB\-\-version \-v\fR
+Output version information.
+
+.SH "GENERAL"
+.LP 
+There are several ways to call cget:
+.BR 
+
+.LP 
+1.  To retrive a file from the default cluster:
+.IP 
+\fBcget /tmp/file1\fR
+.IP 
+When a target directory is not specified as above then the file is retrieved to the current directory
+
+.LP 
+2.  To retrieve a file from a subset of nodes on the default cluster:
+.IP 
+\fBcget :2\-6 /tmp/output /home/user1/data/\fR
+.IP 
+This retrieves /tmp/output on nodes 2, 3, 4, 5, 6 and places them in /home/user1/data on the local machine
+
+.LP 
+3.  To retrieve a file from a list of clusters:
+.IP 
+\fBcget cluster1: cluster2: /tmp/output\fR
+.IP 
+This will retrieve the same file from each cluster and store it in the current directory.
+.SH "SETUP"
+.LP 
+See the C3 INSTALL file for installation instructions.  Also see C3_noderange for help on node ranges on the command line.  If using the scalable setup please see c3\-scale
+
+.SH "ENVIRONMENT"
+.LP 
+C3_RSH
+.IP 
+By default, the C3 tools will use ssh to issue the remote commands.  If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh.
+.IP 
+For example, if you are using the bash shell you would do the following:
+.IP 
+\fBexport C3_RSH=rsh\fR
+.IP 
+Any program that behaves like rsh or ssh is acceptable.
+
+.LP 
+C3_PATH
+.IP 
+The default install path for C3 is /opt/c3\-5.  If you install C3 in an alternate location this variable must point to that installation.  For remote clusters C3 must be installed in the same directory on each cluster.
+.IP 
+For example, if you installed C3 in your home directory you might use the following:
+.IP 
+\fBexport C3_PATH=/home/sgrundy/c3\-5\fR
+.IP 
+
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+
+.LP 
+C3_USER
+.IP 
+By default, the C3 tools will use your local username to access a remote cluster.  If you wish to use a different default then set this variable to it.
+.IP 
+For example, this will change the example user from sgrundy to mmanhunter:
+.IP 
+\fBexport C3_USER=mmanhunter\fR
+.IP 
+.SH "FILES"
+.LP 
+\fI/etc/c3.conf\fR
+.IP 
+This file is the cluster configuration file that ccontainsthe names of the nodes to which commands will be sent.  The cluster configuration file may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf man page for format.
+.SH "SEE ALSO"
+c3(1), cexec(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5), c3\-scale(5)

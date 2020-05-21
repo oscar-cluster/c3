@@ -1,0 +1,44 @@
+Source: c3
+Section: misc
+Priority: optional
+Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.7.2.2
+
+Package: c3
+Architecture: all
+Depends: python (>= 2.4)
+Description: Cluster Command and Control (C3)
+ The Cluster Command and Control (C3) tool suite offers a command line
+ interface for system and user administration tasks on a cluster.
+
+Package: c3-c3cmd-filter
+Architecture: all
+Depends: c3
+Description: c3cmd-filter, part of the Cluster Command and Control (C3)
+ The Cluster Command and Control (C3) - 'c3cmd-filter' command used
+ on client nodes in conjunction with cexec commands from headnode.
+ .
+ Used with C3 in order for nodes to convey error results back to the
+ controlling C3 command when only STDOUT/STDERR is available for
+ communication.
+    Success - nothing is printed or displayed to output
+    Failure - the error string from the open() or the cmd itself
+              is displayed, all on a single line
+ .
+ Usage: cexec c3cmd-filter COMMAND
+
+Package: c3-ckillnode
+Architecture: all
+Depends: c3
+Description: ckillnode, part of the Cluster Command and Control (C3)
+ The Cluster Command and Control (C3) - 'ckillnode' command used
+ on client nodes in conjunction with 'ckill' from headnode.
+ .
+ NOTE: Only needed on client nodes.
+
+Package: c3-contrib
+Architecture: all
+Depends: c3
+Description: contribs to Cluster Command and Control (C3).
+ NOTE: Only needed on the head node.

@@ -1,0 +1,12 @@
+# "contrib/README"
+
+The material contained in this "contrib/" directory are scripts that we have
+found useful. They are not part of C3 proper as they are generally site
+specific. They may require some modification for use by others to meet local
+settings and/or current versions of C3. You are encouraged to read the
+source code before using the scripts.
+
+These are also useful as they show several ways that the C3 tools can be
+scripted. Check the header of the individual scripts for a brief
+description.
+

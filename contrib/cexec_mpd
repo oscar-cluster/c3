@@ -1,0 +1,525 @@
+#!/usr/bin/env python2
+#
+# Experimental version of 'cexec' that uses the Multi-Purpose Daemon (MPD)
+# to do remote execution instead of the standard RSH/SSH.  Note, this uses
+# a slightly modified version of MPD that outputs the hostnames.
+#
+# Author: Wesley Bland (2005-08-18)
+#
+# TJN: (25jan2011) untested change to subprocess.Popen() (see ticket:16)
+#
+
+try:
+	import sys, os
+    from subprocess import *
+
+	######### set default c3 path ########################
+	try:
+		def_path = os.environ[ 'C3_PATH' ]
+	except KeyError:
+		def_path = '/opt/c3-4'
+	#######################################################
+
+	sys.path.append( def_path )
+	import c3_com_obj, c3_file_obj, socket, c3_sock, re, string
+
+	######## constants ####################################
+	help_info = """c3 version 4.0
+	Usage: cexec [OPTIONS] [MACHINE DEFINTIONS] command
+
+		--help -h	= this screen
+		--file -f	= file containing list of ip's if 
+				  one is not supplied then
+				  /etc/c3.conf will be used
+		-i		= interactive mode, ask once before 
+				  executing
+		--head		= execute command on head node
+				  does not execute on compute nodes 
+				  if specified
+		--pipe -p 	= formats the output in a pipe friendly
+				  fashion
+		--all		= execute command on all the nodes
+				  on all the clusters in the configuration
+				  file, ignores the [MACHINE_DEFINITONS]
+				  block
+
+		machine definitions are in the form of
+		clusterName: start-end, node number"""
+
+	backslash = re.compile( r"\\" )
+	#######################################################
+
+
+	######## check for arguments  #########################
+	if len(sys.argv) == 1:
+		print help_info
+		sys.exit()
+	#######################################################
+
+
+	######### et default options  #########################
+	to_print = 0			#not used in parallel version
+	interactive = 0			#prompt before execution
+	head_node = 0			#execute only on head node
+	filename = "/etc/c3.conf"	#default config file
+	all = 0				#only execute on specified clusters
+	pipe_output = 0
+	defusername = ""
+	options_to_pass = ""
+	#######################################################
+
+
+	######### internal variables ##########################
+	cluster_from_file = {}
+	file_set = 0
+	#######################################################
+
+
+
+	######### parse command line ##########################
+
+	# first create one large string of the command 
+	command_line_list = sys.argv[1:]
+	command_line_string = ''
+	for item in command_line_list:
+		command_line_string = '%s %s' % (command_line_string, item)
+
+	# object used to parse command line
+	c3_command = c3_com_obj.c3_command_line( command_line_string )
+	 
+	# get first option
+	try:
+		option = c3_command.get_opt()
+		while option: # while more options
+			if (option == '-f') or (option == '--file'): # alternate config file
+				if not file_set:
+					filename = c3_command.get_opt_string()
+					file_set = 1
+				else:
+					print "only one file name can be specified."
+					sys.exit()
+			elif option == '-h' or option == "--help": # print help info
+				print help_info
+				sys.exit()
+			elif option == '-i': # ask once before executing command
+				interactive = 1
+			elif option == '--head': # execute only the head node
+				head_node = 1
+			elif option == "--all": #execute on all clusters in the list
+				all=1
+			elif option == '--pipe' or option == '-p':
+				pipe_output = 1
+				options_to_pass = options_to_pass + " --pipe"
+			else: # a catch all, option supplied not valid
+				print "option ", option, " is not valid"
+				sys.exit()
+			option = c3_command.get_opt()
+	except c3_com_obj.end_of_option: #quit parsing options
+		pass
+
+	# create cluster object from command line 
+	clusters = c3_com_obj.c3_cluster_list()
+	 
+	if all == 0:
+		clusters = c3_command.get_clusters()
+	else:
+		c3_command.get_clusters()
+
+	# get command to execute
+	command = c3_command.rest_of_command()
+
+	#######################################################
+
+
+	######### test if ssh or rsh ##########################
+	try:
+		transport = os.environ[ 'C3_RSH' ]
+	except KeyError:
+		transport = 'ssh'
+	#######################################################
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
+
+	######### set default user name #######################
+	try:
+		defusername = os.environ[ 'C3_USER' ]
+	except KeyError:
+		defusername = os.environ[ 'USER' ]
+
+
+	######### make cluster list object from file ##########
+
+	########################################################
+	########################################################
+	# fixed to only read clusters specified 
+	# and to set default cluster correctly
+	try: # open file & initialize file parser
+		file = c3_file_obj.cluster_def( filename )
+	except IOError:
+		print "error opening file: ", filename
+		sys.exit()
+
+
+	######################################################
+	# there are two ways needed to biuld the cluster objects.
+	# one is a subset of available clusters and the other
+	# is to execute on all the clusters with the --all switch
+	# when building the clusters object It is not known which
+	# clusters are valid names so they must be populated while 
+	# reading from the file
+	#######################################################
+	try:
+		file.get_next_cluster() # set the default cluster (first cluster in list)
+		
+		try:
+			if clusters.clusters[0] == "/default":
+				clusters.clusters[0] = file.get_cluster_name()
+				clusters.node[file.get_cluster_name()] = clusters.node["/default"]
+				del clusters.node["/default"]
+				clusters.username[file.get_cluster_name()] = clusters.username["/default"]
+		except IndexError: #will be thrown if --all switch is used
+			pass 
+
+		while(1): #throws exception when no more clusters
+			c_name = file.get_cluster_name() #name of cluster being parsed
+			if all == 1:
+				clusters.clusters.append( c_name )
+				clusters.node[c_name] = []
+				clusters.node[c_name].append( "" ) 
+			if c_name in clusters.clusters:
+				cluster_from_file[c_name] = {}
+				cluster_from_file[c_name]['external'] = file.get_external_head_node()
+				cluster_from_file[c_name]['internal'] = file.get_internal_head_node()
+				cluster_from_file[c_name]['nodes'] = [] #list of node names from file
+				if cluster_from_file[c_name]['external']: #if a direct cluster
+					index = 0
+					try:
+						while(1): # build list of nodes
+							node_obj = file.get_next_node()
+							cluster_from_file[c_name]['nodes'].append( c3_file_obj.node_obj() )
+							cluster_from_file[c_name]['nodes'][index] = node_obj
+							index = index + 1
+					except c3_file_obj.end_of_cluster:
+						pass
+			file.get_next_cluster() #repeat untill no more clusters
+	except c3_file_obj.no_more_clusters:
+		pass
+	except c3_file_obj.parse_error, error:
+		print error.description
+		print "somewhere around ", error.last
+		sys.exit()
+
+
+	#######################################################
+
+
+	######### execute command on each node in cluster
+
+
+
+	# there are two main groups, local and remote clusters
+	# in each of those groups there are direct and indirect
+	# modes, that is every node specified or a "link". A link
+	# on a local cluster is of course invalid.
+
+	# right now the only way I know how to check if a cluster
+	# is local is to use a "gethostbyname" and compare it
+	# to the head node names (both internel and externel).
+	# right now that is acceptable as many tools require 
+	# the function to work correctly (ssh being one of them)
+	# my want to think about a better way.
+
+	while interactive: # if interactive execution, prompt once before executing
+		answer = raw_input( "execute the following command(y or n): " + command + " :" )
+		if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
+			sys.exit()
+		if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
+			interactive = 0
+			
+
+	pipe_list_outer = []
+	
+	for cluster in clusters.clusters:
+		pipe_list_outer.append( os.pipe() )
+		pid = os.fork()
+		if pid == 0:
+
+			if not pipe_output:
+				line =  "************************* " + cluster + " *************************\n"
+				os.write( pipe_list_outer[-1][1], line )
+
+			############ get machine names #############################
+			try: 
+				local_ip = socket.gethostbyname( socket.gethostname() )
+			except socket.error:
+				print "Can not resolve local hostname"
+				sys.exit()
+			try:
+				int_ip = socket.gethostbyname( cluster_from_file[cluster]['internal'] )
+			except socket.error:
+				int_ip = ""
+			except KeyError:
+				print "Cluster ", cluster, " is not in the configuration file."
+				os.write( pipe_list_outer[-1][1], '\0' )
+				os._exit(0)
+			try:
+				ext_ip = socket.gethostbyname( cluster_from_file[cluster]['external'] )
+				ext_ip_name = cluster_from_file[cluster]['external']
+			except socket.error:
+				ext_ip = ""
+			except TypeError:
+				ext_ip = int_ip
+				ext_ip_name = cluster_from_file[cluster]['internal']
+			############################################################
+			
+			pipe_list = []
+			
+			try:
+				if clusters.username[cluster] == "/default":
+					username = defusername
+				else:
+					username = clusters.username[cluster]
+			except KeyError: #if --all is specified
+				username = defusername
+	
+			if head_node:   #if only execute on head node , do so
+					#will execute on local cluster with ssh also
+				if not pipe_output:
+					line =  "--------- " + cluster + "---------\n" 
+					os.write( pipe_list_outer[-1][1], line )
+				string_to_execute = transport + " " + "-l " + username + " " + ext_ip + " \'" + command + "\'"
+				#string_in = os.popen4(string_to_execute)[1].read()
+                # TJN: untested change to subprocess.Popen() (see ticket:16)
+                p = Popen(string_to_execute, shell=True, 
+                          stdout=PIPE, stderr=STDOUT, close_fds=True)
+                string_in = p.communicate()[0]
+				if pipe_output:
+					regex = re.compile(r"^.", re.MULTILINE)
+					string_in = regex.sub(cluster + " " + ext_ip_name + ": " + "\g<0>", string_in)
+				os.write(pipe_list_outer[-1][1], string_in + "\0" )
+					
+			elif cluster_from_file[cluster]['external']: # if a direct cluster
+				if ext_ip == local_ip or int_ip == local_ip: # if a local cluster
+
+					if ext_ip == "": # error conditions (just don't execute current cluster)
+						print "Can not resolve ", cluster_from_file[cluster]['external']
+					elif int_ip == "":
+						print "Can not resolve ", cluster_from_file[cluster]['internal']
+
+					elif clusters.node[cluster][0] != "" : #range specified on command line
+						nodelist = ""
+						numnodes = 0
+						for node in clusters.node[cluster]: #for each cluster specified on the command line
+							try:
+								if not cluster_from_file[cluster]['nodes'][node].dead: #if machine is not dead
+									nodelist = nodelist + "%s\n" % (cluster_from_file[cluster]['nodes'][node].name)
+									numnodes = numnodes + 1
+							except IndexError:
+								pass
+						if numnodes == 0:
+							os.write( pipe_list_outer[-1][1], 'No nodes specified\0' )
+							os._exit(1)
+						#Creates file that will have the names of the machines to be run on
+						filename = '/tmp/%s%d%d' % (local_ip, os.getuid(), os.getpid()) 
+						file = open(filename, 'w')
+						file.write(nodelist)
+						file.close()
+
+						pipe_list.append( os.pipe() )
+						
+						string_to_execute = "mpdrun -np %d -hl -hf %s %s" % (numnodes, filename, command)
+						#string_in = os.popen4( string_to_execute )[1].read()
+                		# TJN: untested change to subprocess.Popen() (see ticket:16)
+                		p = Popen(string_to_execute, shell=True, 
+                          		  stdout=PIPE, stderr=STDOUT, close_fds=True)
+                		string_in = p.communicate()[0]
+						os.system( 'rm -f %s' % (filename) )
+
+						if pipe_output:	
+							regex = re.compile(r"^.", re.MULTILINE)
+							string_in = regex.sub(cluster + " \g<0>", string_in)
+							if len (string_in) == 0:
+								string_in = cluster + " " + ":\n"
+							os.write( pipe_list[-1][1], string_in )
+						else:
+							outputlist = {}
+							for line in string.split(string_in, '\n'):
+								if line == '':
+									continue
+								linearray = string.split(line, ':')
+								linearray[1] = string.join(linearray[1:], ':')
+								del linearray[2:]
+								linename = string.strip(linearray[0])
+								if not outputlist.has_key(linename):
+									outputlist[linename] = ''
+								outputlist[linename] = outputlist[linename] + string.strip(linearray[1]) + '\n'
+							for node_name in outputlist.keys():
+								os.write( pipe_list[-1][1], "--------- " + node_name + " ---------\n" )
+								os.write( pipe_list[-1][1], outputlist[node_name] )
+							
+						os.write( pipe_list[-1][1], '\0' )
+					else:  # no range specified on command line, do all nodes
+						nodelist = ""
+						numnodes = 0
+						for node in cluster_from_file[cluster]['nodes']:  # for each node in cluster
+							if not node.dead: #if node not dead
+								nodelist = nodelist + "%s\n" % node.name
+								numnodes = numnodes + 1
+								
+						#Creates file that will have the names of the machines to be run on
+						filename = '/tmp/%s%d%d' % (local_ip, os.getuid(), os.getpid()) 
+						file = open(filename, 'w')
+						file.write(nodelist)
+						file.close()
+
+						pipe_list.append( os.pipe() )
+						
+						string_to_execute = "mpdrun -np %d -hl -hf %s %s" % (numnodes, filename, command)
+						#string_in = os.popen4( string_to_execute )[1].read()
+                		# TJN: untested change to subprocess.Popen() (see ticket:16)
+                		p = Popen(string_to_execute, shell=True, 
+                          		  stdout=PIPE, stderr=STDOUT, close_fds=True)
+                		string_in = p.communicate()[0]
+						os.system( 'rm -f %s' % (filename) )
+
+						if pipe_output:	
+							regex = re.compile(r"^.", re.MULTILINE)
+							string_in = regex.sub(cluster + " \g<0>", string_in)
+							if len (string_in) == 0:
+								string_in = cluster + " " + ":\n"
+							os.write( pipe_list[-1][1], string_in )
+						else:
+							outputlist = {}
+							for line in string.split(string_in, '\n'):
+								if line == '':
+									continue
+								linearray = string.split(line, ':')
+								try:
+									linearray[1] = string.join(linearray[1:], ':')
+								except IndexError:
+									print 'LINE: ' + line
+								del linearray[2:]
+								linename = string.strip(linearray[0])
+								if not outputlist.has_key(linename):
+									outputlist[linename] = ''
+								outputlist[linename] = outputlist[linename] + string.strip(linearray[1]) + '\n'
+							for node_name in outputlist.keys():
+								os.write( pipe_list[-1][1], "--------- " + node_name + " ---------\n" )
+								os.write( pipe_list[-1][1], outputlist[node_name] )
+							
+						os.write( pipe_list[-1][1], '\0' )
+					for pipe in pipe_list:
+						line = os.read( pipe[0], 1024)
+						while line[-1] != '\0':
+							line = line + os.read( pipe[0], 1024)
+						line=line[:-1]
+						os.write( pipe_list_outer[-1][1], line )		
+					os.write( pipe_list_outer[-1][1], '\0' )
+				else: # remote cluster
+					if ext_ip == "": # error condition
+						print "Can not resolve ", cluster_from_file[cluster]['external']
+						sys.stdout.flush()
+					else:
+						# generate temprorary config file
+						cluster_def_string = "cluster " + cluster + " {\n"
+						cluster_def_string = cluster_def_string + cluster_from_file[cluster]['external'] + ":" + cluster_from_file[cluster]['internal'] + "\n"
+
+			
+						if clusters.node[cluster][0] != "" : #range specified on command line
+							try:
+								for node in clusters.node[cluster]: #for each node specified on command line
+									if not cluster_from_file[cluster]['nodes'][node].dead: # if cluster node not dead
+										node_name = cluster_from_file[cluster]['nodes'][node].name #add cluster to list
+										cluster_def_string = cluster_def_string + node_name + "\n"
+							except IndexError:
+								pass
+						else:  # no range specified on command line, do all nodes
+							for node in cluster_from_file[cluster]['nodes']: # for each node in cluster
+								if not node.dead: #if node not dead, add to list
+										cluster_def_string = cluster_def_string +  node.name + "\n"
+						cluster_def_string = cluster_def_string + "}" # close list
+										
+						#this is an attempt to generate a unique file name. As there is no easy way
+						#for me to see the remote machine I mangle a group of relativly unique
+						#identifiers. since i prepend the machine ip address if the file does not reside localy
+						#it should not remotely, at the very least it should be safe to rewrite the file
+						filename = "/tmp/" + local_ip + "%d" % os.getuid() + "%d" % os.getpid() 
+						string_to_execute = transport + " " + "-l " + username + " " + ext_ip + " " + def_path + "/cget --head --non_interactive " + filename
+						sock = c3_sock.server_sock( string_to_execute )
+						answer = sock.recieve()
+						sock.close()
+						while answer == 'good': #make sure file name is unique on local machine
+							filename = filename + "1"
+							string_to_execute = transport + " " + "-l " + username + " " + ext_ip + " " + def_path + "/cget --head --non_interactive " + filename
+							sock.__init__( string_to_execute )
+							answer = sock.recieve()
+							sock.close()
+
+						FILE = open( filename, 'w' )
+						FILE.write( cluster_def_string )
+						FILE.close()
+						# push file to remote machine
+						string_to_execute = "rsync --rsh=" + transport + " " + filename + " " + username + "@" + ext_ip + ":" +  filename
+						os.system( string_to_execute )
+						# execute commend remotely
+						string_to_execute = transport + " " + "-l " + username + " "  + ext_ip + " \' " + def_path + "/cexec -f " + filename + " " + options_to_pass + " \"" + command + " \"\'"
+						#string_in = os.popen4( string_to_execute )[1].read()
+                		# TJN: untested change to subprocess.Popen() (see ticket:16)
+                		p = Popen(string_to_execute, shell=True, 
+                          		  stdout=PIPE, stderr=STDOUT, close_fds=True)
+                		string_in = p.communicate()[0]
+						os.write( pipe_list_outer[-1][1], string_in )
+						os.write( pipe_list_outer[-1][1], '\0' )
+						# remove temporary file
+						string_to_execute = transport + " " + "-l " + username + " " + ext_ip + " /bin/rm -f " + filename
+						os.system( string_to_execute )
+						os.unlink( filename ) # remove local temp file
+					
+			else: # indirect clusters
+				if int_ip == local_ip:  # can not have a indirect local cluster since if your default cluster
+							# is local you would generate a circular reference
+					print "error local cluster"
+					sys.stdout.flush()
+					os.write( pipe_list_outer[-1][1], '\0' )
+				else: # remote indirect cluster
+					if int_ip == "": # error condition
+						print "Can not resolve hostname ", cluster_from_file[cluster]['internal']
+						sys.stdout.flush()
+					else:
+						node_list = "" # generate new node list from the command line
+						if clusters.node[cluster][0] != "" : #range specified on command line
+							node_list = ":%d" % clusters.node[cluster].pop(0)
+
+							for node in clusters.node[cluster]:
+								node_list = node_list + ", %d" % node	
+						# execute command on remote machine
+						string_to_execute = transport + " " + "-l " + username + " " + int_ip + " \' " + def_path + "/cexec " + options_to_pass + " " + node_list + " \"" + command + " \"\'"
+						#string_in = os.popen4( string_to_execute )[1].read()
+                		# TJN: untested change to subprocess.Popen() (see ticket:16)
+                		p = Popen(string_to_execute, shell=True, 
+                          		  stdout=PIPE, stderr=STDOUT, close_fds=True)
+                		string_in = p.communicate()[0]
+						os.write( pipe_list_outer[-1][1], string_in )
+						os.write( pipe_list_outer[-1][1], '\0' )
+			os._exit(1)
+
+	output = ""
+	for pipe in pipe_list_outer:
+		line = os.read( pipe[0], 1024 )
+		while line[-1] != '\0':
+			line = line + os.read( pipe[0], 1024 )
+		output = output + line[:-1]
+	try:
+		if output[-1] == '\n':
+			output = output[:-1]
+		print  output 
+	except IndexError:
+		print "No computer returned any output."
+		
+except KeyboardInterrupt:
+	print "Keyboard interrupt\n"

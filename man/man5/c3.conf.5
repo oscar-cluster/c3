@@ -1,0 +1,119 @@
+.\" c3.conf(5)
+.\" 
+.\" this file with 'groff -man -Tascii cexec.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "C3.CONF" "5" "" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland" "C3 User Manual"
+.SH "NAME"
+.LP 
+\fIc3.conf\fR \- The default cluster defintion file and its format.
+
+.SH "DESCRIPTION"
+.LP 
+Specific instances of C3 commands identify their compute nodes with the help of **cluster configuration files**:  files that name a set of accessible clusters and describe the set of machines in each accessible cluster. 
+.BR 
+.LP 
+/etc/c3.conf, the default cluster configuration file, should consist of a list of **cluster descriptor blocks**:  syntactic objects that name and describe a single cluster that is accessible to that system's users.
+.BR 
+.LP 
+The following is an example of a default configuration file that contains exactly one cluster descriptor block:  a block that describes a cluster of 64 nodes:
+.LP 
+    cluster local {
+        htorc\-00:node0  #head node
+        node[1\-64]      #compute nodes
+    }
+.LP  
+\fBCluster description blocks\fR consist of the following basic elements:
+.IP  
+\-. A **cluster tag**:  The word "cluster", followed by a label, which assigns a name to the cluster.  This name (in the above example "local" )can be supplied to C3 commands as a way of specifying the cluster on which a command should execute.
+.BR 
+.IP 
+\-. An open curly brace, which signals the start of the cluster's declaration proper.
+.BR 
+.IP 
+\-. A **head node descriptor**:  A line that names the interfaces on the cluster's head node.  The head node descriptor shown here has two parts: 1)The string to the left of the colon identifies the head node's **external** interface: a network device that links the head node to computers outside the cluster.  This string can be the interface's IP address or DNS\-style hostname. 2) The string to the right of the colon identifies the head node's **internal** interface: a network device that links the head node to nodes inside the cluster.  This string can be the interface's IP address or DNS\-style hostname. In the example above, the head node descriptor names a head node with an external interface named htorc\-00, and an internal interface named node0. If a cluster has no external interface\-\-i.e., a cluster that is on a closed system\-\-it can be specified by either making the internal and external name the same, or dropping the colon, and using one name in the specifier.
+.BR 
+.IP 
+\-. A list of **compute node descriptors**:  A series of individual descriptors that name the cluster's compute nodes.  The example given above contains exactly one compute node descriptor.  This descriptor uses a range to specify a cluster that contains 64 compute nodes named node1, node2, etc. up through node64.  A range qualifier consists of a nonnegative integer, followed by a dash, and then a second integer that is at least as large as the first.  This range must be between the brackets at the end of the node name.  In the current version of the C3 toolset, these range values are treated as numbers, with no leading zeroes.  A declaration like
+.BR 
+.LP 
+    cluster local {
+         htorc\-00:node0  #head node
+         node[01\-64]     #compute nodes
+    }
+.BR 
+.IP  
+expands to the same 64 nodes as the declaration shown above.  To specify a set of nodes with names like node01, node09, node10, ...node64, use declarations like
+.BR 
+.LP 
+    cluster local {
+         htorc\-00:node0  #head node
+         node0[1\-9]      #compute nodes node01..node09
+         node[10\-64]     #compute nodes node10..node64
+    }
+.BR 
+.IP 
+To end a cluster description block, use a final, closing curly brace.
+.BR 
+.LP 
+Configuration files that specify multiple clusters are constituted as a list of cluster descriptor blocks, one per accessible cluster.  The following example of a cluster configuration file contains three blocks that specify configurations for clusters named local, torc, and my\-cluster, respectively:
+.BR 
+.LP 
+    cluster local {
+         htorc\-00:node0  #head node
+         node[1\-64]      #compute nodes
+         exclude 2
+         exclude [55\-60]
+    }
+ 
+    cluster torc {
+         :orc\-00b
+    }
+ 
+    cluster my\-cluster {
+         osiris:192.192.192.2
+         woody
+         dead riggs
+    }
+.BR 
+.LP 
+The first cluster in the file has a special significance that is analogous to the special significance accorded to the first declaration in a Makefile.  Any instance of a C3 command that fails to name the cluster on which it should run executes, by default, on the first cluster in the configuration file.  Here, for example, any command that fails to name its target cluster would default to local.
+.BR 
+.LP 
+The cluster configuration file shown above illustrates three final features of the cluster definition language:  **exclude qualifiers**, **dead qualifiers**, and **indirect cluster** descriptors.
+.BR 
+.TP 
+\fBExclude qualifiers\fR
+Allow nodes to be excluded from a cluster's configuration: i.e., to be identified as offline for the purpose of a command execution.  Exclude qualifiers may only be applied to range declarations, and must follow immediately after a range declaration to which they are being applied.  A series of exclude declarations is ended by a non\-exclude declaration, or the final "}" in a cluster declaration block.  An exclude qualifier can be written in one of two ways: "exclude n", where n is the number of a node to exclude from the cluster; "exclude[m\-n]", where m is the start of a range and n is the end of a range. Note that a string like "exclude5" is parsed as a node name, rather than as an exclude qualifier (it does not match the above formats, a space must be between the exclude and a single number). In the above example, the two exclude qualifiers have the effect of causing node2, node55, node56 node57, node58, node59, and node60 to be treated as offline for the purpose of computation.
+.BR 
+.TP 
+\fBDead qualifiers\fR
+Are similar to exclude qualifiers, but apply to individual machines.  In the example given above, the machine named "riggs" in the cluster named "my\-cluster" is excluded from all executions of C3. "Dead", like "exclude", is not a reserved word in the current version of the C3 suite.  A specification block like
+.BR 
+.LP 
+    cluster my\-cluster {
+         alive:alive
+         dead
+    }
+.BR 
+.IP 
+For example, declares a two\-machine cluster with a head node named "alive" and a compute node named "dead".
+.BR 
+.TP 
+\fBIndirect cluster descriptor\fR
+Is treated as a reference to another cluster, rather than as a description of a cluster per se.  In the main example shown above, the descriptor
+.BR 
+.LP 
+    cluster torc {
+         :orc\-00b
+    }
+.BR 
+.IP 
+is an indirect cluster descriptor.  An indirect descriptor consists of a cluster tag, followed by an \fIindirect head node descriptor\fR. An indirect head node descriptor consists of an initial colon, followed by a string that names a **remote** system.  This name, which can either be an IP address or a DNS\-style hostname, is checked whenever a C3 command executes to verify that that the machine being referenced is not the machine on which that command is currently executing.
+.BR 
+.IP 
+The indirect cluster descriptors can be used to construct **chains** of remote references, that is, multiple levels of indirection configurations where an indirect cluster descriptor on a machine A references an indirect cluster descriptor on a machine B.  Here, it is the system administrator's responsibility to avoid circular references.
+.SH "SEE ALSO"
+c3(1), cget(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), cexec(1), c3_noderange(5)

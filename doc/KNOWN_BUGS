@@ -1,0 +1,50 @@
+	C3 version 5:   Cluster Command & Control Suite
+          Oak Ridge National Laboratory, Oak Ridge, TN,
+    Authors: M.Brim, R.Flanery, G.A.Geist, B.Luethke, S.L.Scott
+	        (C) 2007 All Rights Reserved
+
+
+
+1: When specifying indirect remote clusters the default 
+cluster on the remote machine is executed. If that machines
+default cluster is the calling machine then there is a possibility
+of an infinite circle. In other words each machines default cluster
+is the other machine.
+
+2: ckill reads the output of ps to retrieve the process ID. If
+the version of ps does not return its output in the same format
+as the ps included with redhat then it will fail.
+
+3:  when starting a daemon or running an infinite process as follows:
+
+cexec 'a.out &'
+
+cexec will not return. This is a problem with ssh not closing and
+C3 waiting for the ssh process to finish. If you ^C the cexec 
+process after all the daemons/processes are started they will continue 
+to run (use cexec 'ps -A |grep -i process_name' to check if you want)
+
+4: C3 automatically detects if a cluster is local or remote by comparing
+the current machines hostname to both the internal and external IP address
+supplied for the cluster. In cases such that you are trying to execute on 
+a remote cluster that has the same interface name as a local cluster, C3
+will execute the command on the local cluster. For example, the following
+machine's configuration file has this problem:
+
+cluster torc { #local cluster
+	torc:node0
+	node1[1-4]
+}
+
+cluster xtorc { #direct remote
+	xtorc:node0
+	node[1-10]
+}
+
+Since torc's head-node must have the internal address as it's hostname "node0"
+will match both clusters as local. For now, the only fix is to use and indirect
+remote cluster.
+
+if a bug is found please report it to:
+	srt-contact@ornl.gov
+

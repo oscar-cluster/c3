@@ -1,0 +1,103 @@
+.\" 
+.\" 
+.\" this file with 'groff -man -Tascii c3.1'
+.\" 
+.\" 
+.\" 
+.\" 
+.TH "C3" "1" "" "M. Brim, B. Luethke, S. Scott, A. Geist, T. Naughton, G. Vallee, W. Bland " "Cluster Command & Control (C3) Tool Suite"
+.SH "NAME"
+.LP
+\fBc3\fR \- Cluster Command & Control (C3) Tool Suite.
+
+.SH "DESCRIPTION"
+The Cluster Command Control (C3) tools are a suite of cluster tools developed at Oak Ridge National Laboratory that are useful for both administration and application support.  The suite includes tools for cluster\-wide command execution, file distribution and gathering, process termination, remote shutdown and restart, and system image updates.  A short description of each tool follows:
+.BR 
+.LP 
+.LP 
+cexec \- General utility that enables the execution of any standard command on all cluster nodes
+.BR 
+.LP 
+.LP 
+cget \- Retrieves files from all cluster nodes
+.BR 
+.LP 
+.LP 
+ckill \- Terminates a user specified process on all cluster nodes
+.BR 
+.LP 
+.LP 
+cpush \- Distribute files to all cluster nodes
+.BR 
+.LP 
+.LP 
+cpushimage \- Update the system image on all cluster nodes using an image captured by the SystemImager tool
+.BR 
+.LP 
+.LP 
+crm \- Remove files or directories from all cluster nodes
+.BR 
+.LP 
+.LP 
+cshutdown \- Shutdown or restart all cluster nodes
+.BR 
+.LP 
+.LP 
+The default method of execution for the tools is to run the command on all cluster nodes concurrently.  However, a serial version of cexec is also provided that may be useful for deterministic execution and debugging.  To invoke the serial version of cexec, type cexecs instead of cexec.
+.BR 
+.LP 
+.LP 
+For more information on how to use each tool, see the man page for the specific tool.
+
+
+
+.SH "ENVIRONMENT"
+.LP 
+C3_RSH
+.IP 
+By default, the C3 tools will use ssh to issue the remote commands.  If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh.
+.IP 
+For example, if you are using the bash shell you would do the following:
+.IP 
+\fBexport C3_RSH=rsh\fR
+.IP 
+Any program that behaves like rsh or ssh is acceptable.
+
+.LP 
+C3_PATH
+.IP 
+The default install path for C3 is /opt/c3\-5.  If you install C3 in an alternate location this variable must point to that installation.  C3 can be anywhere on each node as long as the C3_PATH variable is correct.
+.IP 
+For example, if you installed C3 in your home directory you might use the following:
+.IP 
+\fBexport C3_PATH=/home/sgrundy/c3\-5\fR
+.IP 
+
+.LP 
+C3_CONF
+.IP 
+C3's default configuration file is /etc/c3.conf.  If you wish an alternate default configuration file set this to point to the file.
+.IP 
+For example, if you keep a special c3.conf file in your home directory you may use:
+.IP 
+\fBexport C3_CONF=/home/sgrundy/.c3conf\fR
+.IP 
+
+.LP 
+C3_USER
+.IP 
+By default, the C3 tools will use your local username to access a remote cluster.  If you wish to use a different default then set this variable to it.
+.IP 
+For example, this will change the example user from sgrundy to mmanhunter:
+.IP 
+\fBexport C3_USER=mmanhunter\fR
+.IP 
+.SH "FILES"
+.LP 
+\fI/etc/c3.conf\fR
+.IP 
+This file is the cluster configuration file which the tools use to access the cluster.  The cluster configuration file may also be specified from the command line.  The format of both files is identical.
+.IP 
+See the c3.conf man page for datails.
+.SH "SEE ALSO"
+cexec(1), cget(1), ckill(1), cpush(1), cpushimage(4), crm(1), cshutdown(4), cname(1), cnum(1), clist(1), c3.conf(5), c3\-range(5), c3\-scale(5)

@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# Basic example for pushing account information to the cluster.
+#
+
+/opt/c3-5/cpush /etc/passwd  
+/opt/c3-5/cpush /etc/group
+if [ -f /etc/shadow ]; then
+  /opt/c3-5/cpush /etc/shadow 
+fi
+if [ -f /etc/gshadow ]; then
+  /opt/c3-5/cpush /etc/gshadow 
+fi
+
+exit 0

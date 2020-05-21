@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+# $Id: clist 186 2011-01-21 23:07:00Z tjn $
+
+import c3_config
+import c3_version
+
+try:
+	import sys, os
+
+	sys.path.append( c3_config.def_path )
+	import c3_com_obj, c3_file_obj, socket, re
+
+	######## constants ####################################
+	help_info = """Usage: clist [OPTIONS]
+
+	--help -h	= Display help message.
+	--file -f       = Alternate cluster configuration file.  If one 
+			  is not supplied then /etc/c3.conf will be used.
+	--version -v 	= Display the version number
+"""
+	backslash = re.compile( r"\\" )
+
+	filename = "/etc/c3.conf"       #default config file  
+
+	#######################################################
+
+
+	# first create one large string of the command 
+	command_line_list = sys.argv[1:]
+	command_line_string = ''
+	for item in command_line_list:
+		command_line_string = '%s %s' % (command_line_string, item)
+
+	# object used to parse command line
+	c3_command = c3_com_obj.c3_command_line( command_line_string )
+	 
+	# get first option
+	try:
+		file_set = 0
+		option = c3_command.get_opt()
+		while option: # while more options
+			if option == '-h' or option == "--help": # print help info
+				print help_info
+				print "exiting...."
+				sys.exit(c3_config.C3_OKEXIT)
+
+			elif (option == '-f') or (option == '--file'): # alternate config file
+				if not file_set:
+					filename = c3_command.get_opt_string()
+					file_set = 1
+				else:
+					print "only one file name can be specified."
+					sys.exit(c3_config.C3_ERRLOCAL)
+			
+			elif option == '--version' or option == '-v':
+				# Get C3's version
+				print c3_version.c3_version
+				sys.exit(c3_config.C3_OKEXIT)
+			else:
+				print "invalid option"
+				sys.exit(c3_config.C3_ERRLOCAL)
+			option = c3_command.get_opt()
+	except c3_com_obj.end_of_option:
+		pass
+
+        ######### set filename  ##########################
+        if not file_set:
+                try:
+                        filename = os.environ[ 'C3_CONF' ]
+                except KeyError:
+                        filename = '/etc/c3.conf'
+        #######################################################
+
+	######### make cluster list object from file ##########
+	try: # open file & initialize file parser
+		file = c3_file_obj.cluster_def( filename )
+	except IOError:
+		print "error opening file: ", filename
+		sys.exit(c3_config.C3_ERRLOCAL)
+
+	try:
+		while(1): #throws exception when no more clusters
+			file.get_next_cluster()
+			try:
+				local_ip = socket.gethostbyname( socket.gethostname() )
+			except socket.error:
+				print "Can not resolve local hostname"
+				sys.exit(c3_config.C3_ERRLOCAL)
+			try:
+				int_ip = socket.gethostbyname( file.get_internal_head_node() )
+			except socket.error:
+				int_ip = ""
+			try:
+				ext_ip = socket.gethostbyname( file.get_external_head_node() )
+			except socket.error:
+				ext_ip = ""
+			except TypeError:
+				ext_ip = int_ip
+
+			if file.get_external_head_node():
+				if ext_ip == local_ip or int_ip == local_ip:
+					print "cluster ", file.get_cluster_name(), " is a direct local cluster"
+				else:
+					print "cluster ", file.get_cluster_name(), " is a direct remote cluster"
+			else:
+				print "cluster ", file.get_cluster_name(), " is an indirect remote cluster"
+			
+			
+	except c3_file_obj.no_more_clusters:
+		pass
+		
+	except c3_file_obj.parse_error, error:
+		print error.description
+		print "somewhere around ", error.last
+		sys.exit(c3_config.C3_ERRLOCAL)
+except KeyboardInterrupt:
+        print "Keyboard interrupt\n"
+        
+sys.exit(c3_config.C3_OKEXIT)
+
+# vim:tabstop=4:shiftwidth=4:noexpandtab:textwidth=76
