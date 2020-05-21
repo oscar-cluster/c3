@@ -1,0 +1,24 @@
+### MacOS Finder informations ##
+.DS_Store
+.DS_Store?
+### autotools files
+autom4te.cache
+aclocal.m4
+missing
+install-sh
+configure
+Makefile.in
+build-stamp
+configure-stamp 
+### Generated files
+src/c3_version.py
+src/ckillnode
+rpm/c3.spec
+Makefile
+C3-VERSION
+debian/c3-c3cmd-filter 
+debian/files 
+debian/c3 
+debian/c3-ckillnode 
+debian/c3*.log
+debian/c3-contrib/
