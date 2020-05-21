@@ -12,15 +12,13 @@ URL: http://www.csm.ornl.gov/torc/C3/
 AutoReqProv: no
 Requires: rsync
 Requires: perl
-Requires: python >= 2.4
+Requires: python3
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildArch: noarch
 
 %description
 The Cluster Command and Control (C3) tool suite offers a command line
 interface for system and user administration tasks on a cluster. 
-
-
 
 
 %package ckillnode
@@ -32,7 +30,6 @@ The Cluster Command and Control (C3) - 'ckillnode' command used
 on client nodes in conjunction with 'ckill' from headnode.  
 
 NOTE: Only needed on client nodes.
-
 
 
 %package profiled
@@ -86,8 +83,6 @@ The Cluster Command and Control (C3) - contrib scripts
 
 # Actually do the untar/gzip stuff
 %setup
-
-
 
 
 #---------------------------------------------------------------------
