@@ -129,7 +129,7 @@ install-c3cmd-filter:
 	install -m 755 contrib/c3cmd-filter $(FILTERDIR)
 
 clean-local: clean-c3cmd-filter clean-profiled clean-version
-	rm -rf $(PREFIX)
+#	rm -rf $(PREFIX)
 	rm -f `find . -name *pyc`
 
 clean-c3cmd-filter:
