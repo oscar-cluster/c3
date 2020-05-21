@@ -1,24 +1,23 @@
 DESTDIR=
 PKGDEST=.
-SOURCEDIR=/usr/src/redhat/SOURCES
 AUTOMAKE_OPTIONS = -Wno-portability
 VERSION_MAJOR= $(shell ./dist/get-version.sh ./VERSION --major)
 C3_BASENAME=c3-$(shell ./dist/get-version.sh ./VERSION --full)
 C3_RPM_TMPDIR=/tmp/c3_tmpdir_redhat
 PREFIX=$(DESTDIR)$(prefix)
-BINDIR=$(PREFIX)/usr/bin
-CONTRIBDIR=$(PREFIX)/contrib
-DOCDIR=$(PREFIX)/doc
-MANDIR=$(DOCDIR)/man
-CONFIGDIR=$(PREFIX)/etc/profile.d
-FILTERDIR=$(PREFIX)/usr/bin
+BINDIR=$(PREFIX)/bin
+DATADIR=$(PREFIX)/share
+DOCDIR=$(DATADIR)/doc/c3
+MANDIR=$(DATADIR)/man
+CONFIGDIR=$(DESTDIR)${sysconfdir}/profile.d
+FILTERDIR=$(PREFIX)/bin
 
 
 BINARIES  =   src/c3_com_obj.py \
               src/c3_except.py \
               src/c3_file_obj.py \
               src/c3_sock.py \
-			  src/c3_config.py \
+              src/c3_config.py \
               src/cexec \
               src/cexecs \
               src/cget \
@@ -33,42 +32,42 @@ BINARIES  =   src/c3_com_obj.py \
               src/cshutdown \
               src/c3_version.py 
 
-EXTRA_DIST	= $(BINARIES) \
-			   src/ckillnode.in \
-			   man/Makefile \
-               man/man1/c3.1 \
-               man/man1/cexec.1 \
-               man/man1/cget.1 \
-               man/man1/ckill.1 \
-               man/man1/clist.1 \
-               man/man1/cname.1 \
-               man/man1/cnum.1 \
-               man/man1/cpush.1 \
-               man/man1/crm.1 \
-               man/man4/cpushimage.4 \
-               man/man4/cshutdown.4 \
-               man/man5/c3.conf.5 \
-               man/man5/c3-range.5 \
-               man/man5/c3-scale.5 \
-               contrib/add_user \
-               contrib/c3cmd-filter \
-               contrib/c3_conf_manager \
-               contrib/cexec_mpd \
-               contrib/cexec_sss \
-               contrib/enable_clusters \
-               contrib/Makefile \
-               contrib/push_passwd \
-               contrib/README \
-               contrib/sync_date \
-               C3-VERSION \
-               debian/control \
-               debian/rules \
-               debian/changelog \
-               debian/compat \
-               debian/copyright \
-               dist/get-version.sh \
-               rpm/c3.spec \
-               VERSION
+EXTRA_DIST = $(BINARIES) \
+              src/ckillnode.in \
+              man/Makefile \
+              man/man1/c3.1 \
+              man/man1/cexec.1 \
+              man/man1/cget.1 \
+              man/man1/ckill.1 \
+              man/man1/clist.1 \
+              man/man1/cname.1 \
+              man/man1/cnum.1 \
+              man/man1/cpush.1 \
+              man/man1/crm.1 \
+              man/man4/cpushimage.4 \
+              man/man4/cshutdown.4 \
+              man/man5/c3.conf.5 \
+              man/man5/c3-range.5 \
+              man/man5/c3-scale.5 \
+              contrib/add_user \
+              contrib/c3cmd-filter \
+              contrib/c3_conf_manager \
+              contrib/cexec_mpd \
+              contrib/cexec_sss \
+              contrib/enable_clusters \
+              contrib/Makefile \
+              contrib/push_passwd \
+              contrib/README \
+              contrib/sync_date \
+              C3-VERSION \
+              debian/control \
+              debian/rules \
+              debian/changelog \
+              debian/compat \
+              debian/copyright \
+              dist/get-version.sh \
+              rpm/c3.spec \
+              VERSION
 
 EXTRA_DIST += doc/KNOWN_BUGS \
               doc/README.devel  \
@@ -78,9 +77,9 @@ EXTRA_DIST += doc/KNOWN_BUGS \
 
 
 install-exec-local: install-c3 \
-				install-ckillnode \
-				install-profiled \
-				install-c3cmd-filter \
+		install-ckillnode \
+		install-profiled \
+		install-c3cmd-filter \
                 install-contrib
 
 install-c3: install-man
@@ -96,7 +95,7 @@ install-contrib:
 
 install-man: 
 	echo "Installing C3 man pages..."
-	cd man; make install DESTDIR=$(DESTDIR) PREFIX=$(MANDIR) 
+	cd man; make install DESTDIR=$(DESTDIR)
 
 install-ckillnode: 
 	echo "Installing C3 ckillnode..."
@@ -143,7 +142,7 @@ clean-version:
 	rm -f C3-VERSION
 
 
-clean-release: distclean  clean-scratch  clean-c3-rpm-tmpdir
+clean-release: distclean  clean-scratch
 
 
 clean-scratch: clean 
@@ -167,41 +166,22 @@ clean-scratch: clean
 	rm -rf autom4te.cache
 
 
-dist-rpm: dist setup-c3-rpm-tmpdir
+dist-rpm: dist
 	-@echo ""
-	-@echo "Generating RPM files..."
+	-@echo "Generating binary RPM files..."
 	-@echo ""
-	cp -f ${C3_BASENAME}.tar.gz   ${C3_RPM_TMPDIR}/SOURCES/
-	tar -O -zxf ${C3_BASENAME}.tar.gz \
-			${C3_BASENAME}/rpm/c3.spec \
-			>  ${C3_RPM_TMPDIR}/SPECS/c3.spec
-	rpmbuild --define "_topdir ${C3_RPM_TMPDIR}/" \
-			-ba ${C3_RPM_TMPDIR}/SPECS/c3.spec
-	cp -f  ${C3_RPM_TMPDIR}/RPMS/*/c3-*.rpm $(PKGDEST) 
-	cp -f  ${C3_RPM_TMPDIR}/SRPMS/c3-*.rpm $(PKGDEST)
+	rpmbuild -tb ./${C3_BASENAME}.tar.gz
+	cp -f `rpm --eval '%_topdir'`/RPMS/*/c3-*.rpm $(PKGDEST) 
 
-rpm: dist-rpm
+dist-srpm: dist
+	-@echo ""
+	-@echo "Generating SRPM file..."
+	-@echo ""
+	rpmbuild -ts ./${C3_BASENAME}.tar.gz
+	cp -f `rpm --eval '%_topdir'`/SRPMS/c3-*.rpm $(PKGDEST)
 
-setup-c3-rpm-tmpdir:
-	-@echo ""
-	-@echo "Setup temporary RPM build dir '${C3_RPM_TMPDIR}'"
-	-@echo ""
-	mkdir -p ${C3_RPM_TMPDIR}/
-	mkdir -p ${C3_RPM_TMPDIR}/{SRPMS,RPMS,SOURCES,SPECS,BUILD}			
-	mkdir -p ${C3_RPM_TMPDIR}/RPMS/{i386,i586,i686,noarch,athlon,ia64}
 
-# TJN: Remove dirs seperately to try and avoid any errant 'rm -rf' commands.
-clean-c3-rpm-tmpdir:
-	-@echo ""
-	-@echo "Remove temporary RPM build dir '${C3_RPM_TMPDIR}'"
-	-@echo ""
-	rm -rf  ${C3_RPM_TMPDIR}/RPMS/
-	rm -rf  ${C3_RPM_TMPDIR}/SRPMS/
-	rm -rf  ${C3_RPM_TMPDIR}/SOURCES/
-	rm -rf  ${C3_RPM_TMPDIR}/SPECS/
-	rm -rf  ${C3_RPM_TMPDIR}/BUILD/
-	rm -rf 	${C3_RPM_TMPDIR}/BUILDROOT/
-	rmdir   ${C3_RPM_TMPDIR}/
+rpm: dist-rpm dist-srpm
 
 dist-deb:
 	echo "Generating Deb files..."
