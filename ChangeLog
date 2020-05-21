@@ -2,10 +2,10 @@
 	C3 version 5:   Cluster Command & Control Suite
 	  Oak Ridge National Laboratory, Oak Ridge, TN,
 	Authors: M.Brim, R.Flanery, G.A.Geist, B.Luethke, S.L.Scott
-          Thomas Naughton, Geoffroy Vallee, Wesley Bland
+	  Thomas Naughton, Geoffroy Vallee, Wesley Bland
 
-          Copyright (c) 2000-2013    Oak Ridge National Laboratory
-                                     All rights reserved.
+	  Copyright (c) 2000-2013    Oak Ridge National Laboratory
+				     All rights reserved.
 
 
 Version 2.7
@@ -101,49 +101,53 @@ Version 4.0
 		execution quit, it now ignores.
 
 Version 4.1
-    Include a new installation mechanism based on a Makefile
-    Reduced cpush default verbosity, see C3_VERBOSE EnvVar (from Erich Focht)
+	Include a new installation mechanism based on a Makefile
+	Reduced cpush default verbosity, see C3_VERBOSE EnvVar (from Erich Focht)
 
 Version 5.0
-    Internal only release, skipped to v5.0.1 for packaging/distribution reasons.
+	Internal only release, skipped to v5.0.1 for packaging/distribution reasons.
 
 Version 5.0.1 
-    cpush now requires a destination as well as a source (see man pages)
-    cpush now supports the use of wildcards on command line (see man pages)
-    Changed the way versioning is handled in the utilities and added
-       '--version' option.
-    Improved error code handling for the tools.
-    Created two new APITests to test return codes for cexec.
-    Created new APITests for cpush and updated the old ones to include the 
-       new changes.
-    Do not install c3 in /opt/c3-x anymore but directly on the system (e.g.,
-       binaries in /usr/bin).
-    Put error codes and default location into a seperate module (include) file
-    Added support to crm for deleting multiple files at once.
-    Improved internal build system, and added automation of release process.
-    Fix for MANPATH (Bernard Li)
+	cpush now requires a destination as well as a source (see man pages)
+	cpush now supports the use of wildcards on command line (see man pages)
+	Changed the way versioning is handled in the utilities and added
+	  '--version' option.
+	Improved error code handling for the tools.
+	Created two new APITests to test return codes for cexec.
+	Created new APITests for cpush and updated the old ones to include the 
+	   new changes.
+	Do not install c3 in /opt/c3-x anymore but directly on the system (e.g.,
+	   binaries in /usr/bin).
+	Put error codes and default location into a seperate module (include) file
+	Added support to crm for deleting multiple files at once.
+	Improved internal build system, and added automation of release process.
+	Fix for MANPATH (Bernard Li)
 
 Version 5.1.0 
-    Fix the man path for Debian packages.
-    Include a new binary packages for contrib.
-    Update the contrib/c3_conf_manager script so we can add and remove nodes from a given cluster
-    Fix bug causing large output to hang cexec - thanks Erik Jacobson (see Ticket#17)
-    Require Python >= 2.4, migrate to subprocess module (see Ticket#16)
-    Fix ckillnode pid lookup with long process name (see Ticket#15)
-    Update copyright stamps to span proper years (2000-2011)
+	Fix the man path for Debian packages.
+	Include a new binary packages for contrib.
+	Update the contrib/c3_conf_manager script so we can add and remove nodes from a given cluster
+	Fix bug causing large output to hang cexec - thanks Erik Jacobson (see Ticket#17)
+	Require Python >= 2.4, migrate to subprocess module (see Ticket#16)
+	Fix ckillnode pid lookup with long process name (see Ticket#15)
+	Update copyright stamps to span proper years (2000-2011)
 
 Version 5.1.1 
-    Fix a problem in contrib/c3_conf_manager where we were calling delete_cluster instead of del_cluster.
+	Fix a problem in contrib/c3_conf_manager where we were calling delete_cluster instead of del_cluster.
 
 Version 5.1.2 
-    Fix a permissions issue on the contrib files.
+	Fix a permissions issue on the contrib files.
 
-Version 5.1.3 (not yet released)
-    Recreate the c3-profiled RPM when running 'make rpm'
-    Install all binaries in @prefix@/usr/bin, and update the profile scripts accordingly
-    Install the c3cmd filter scripts in the appropriate directory
-    Fix usage and del/addnode error with contrib/c3_conf_manager (ticket#34)
-    Add version flag to contrib/c3_conf_manager
-    Update autotool scripts and related files for more modern syntax
-    Update various bits with autotool/scripts for RPM compatible versions
-    Update AUTHOR file to indicate MikeB is back in town!
+Version 5.1.3
+	Recreate the c3-profiled RPM when running 'make rpm'
+	Install all binaries in @prefix@/usr/bin, and update the profile scripts accordingly
+	Install the c3cmd filter scripts in the appropriate directory
+	Fix usage and del/addnode error with contrib/c3_conf_manager (ticket#34)
+	Add version flag to contrib/c3_conf_manager
+	Update autotool scripts and related files for more modern syntax
+	Update various bits with autotool/scripts for RPM compatible versions
+	Update AUTHOR file to indicate MikeB is back in town!
+
+Version 5.1.4 (not yet released)
+	Port to python3
+
