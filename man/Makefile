@@ -3,8 +3,7 @@
 # Authors:  Geoffroy Vallee
 # (C) 2007 All Rights Reserved
 
-PREFIX=
-MANDIR=$(PREFIX)
+MANDIR=$(PREFIX)/${mandir}
 
 all:
 
