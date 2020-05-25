@@ -11,8 +11,6 @@ Packager: Thomas Naughton <naughtont@ornl.gov>
 URL: http://www.csm.ornl.gov/torc/C3/
 AutoReqProv: no
 Requires: rsync
-Requires: perl
-Requires: python3
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildArch: noarch
 
