@@ -1,6 +1,6 @@
 # $Id: c3_except.py 186 2011-01-21 23:07:00Z tjn $
 
-class c3_except:
+class c3_except( Exception ):
 	description = ""
 	last = ""
 
