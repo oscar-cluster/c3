@@ -228,7 +228,7 @@ try:
 	# my want to think about a better way.
 
 	while interactive: # if interactive execution, prompt once before executing
-		answer = input( "execute the following command(y or n): " + command + " :" )
+		answer = eval(input( "execute the following command(y or n): " + command + " :" ))
 		if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
 			sys.exit(c3_config.C3_OKEXIT)
 		if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
@@ -530,7 +530,7 @@ try:
 				except OSError as err:
 					import errno
 					if err.errno != errno.EAGAIN: raise
-					print("OSERROR: ", err, "... retrying", file=sys.stderr)
+					print("OSERROR: ", err, "... retrying", sys.stderr)
 					continue
 		except IndexError:
 			print("No computer returned any output.")
