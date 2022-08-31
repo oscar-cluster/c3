@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # $Id: cget 209 2011-02-02 23:38:27Z tjn $
 
 import c3_config
@@ -20,7 +20,7 @@ try:
 	-i		= Interactive mode.  Ask once before executing.
 	--head		= Execute command on head node.  Does not 
 			  execute on compute nodes  if specified.
-	--all           = Execute command on all the nodes on all the 
+	--all		= Execute command on all the nodes on all the 
 			  clusters in the configuration file, ignores 
 			  the [MACHINE_DEFINITONS] block
 	--dryrun -n	= Does not send commands to machines.
@@ -148,7 +148,7 @@ try:
 		if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
 			sys.exit(CE_OKEXIT)
 		if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
-                        interactive = 0
+			interactive = 0
 
 
 	if not os.path.exists( os.path.dirname(target) ):
@@ -175,13 +175,13 @@ try:
 		defusername = os.environ[ 'USER' ]
 	#######################################################
 
-        ######### set filename  ##########################
-        if not file_set:
-                try:
-                        filename = os.environ[ 'C3_CONF' ]
-                except KeyError:
-                        filename = '/etc/c3.conf'
-        #######################################################
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
 	if non_inter and head_node:
 		sock = c3_sock.client_sock()
 		if os.path.isfile( source ):
@@ -305,7 +305,7 @@ try:
 				username = defusername
 				
 				
-			if head_node:   #if only execute on head node , do so
+			if head_node:	#if only execute on head node , do so
 					#will execute on local cluster with ssh also
 				string_to_execute = transport + " -l " + username + " " + ext_ip + " \'" + c3_config.def_path + "/cget --non_interactive --head " + source + "\'" 
 				sock = c3_sock.server_sock( string_to_execute )
