@@ -15,9 +15,9 @@ class cluster_def:
 	"parses the cluster definition file"
 
 	###################################################################
-	#  this is the regular expressions used parse the file            #
+	#  this is the regular expressions used parse the file	    #
 	###################################################################
-	
+
 	# beginning of cluster definition (name of the cluster)
 	# matches cluster_name {
 	cluster_name = re.compile ( r"""
@@ -92,7 +92,7 @@ class cluster_def:
 
 	# string to hole the current cluster name
 	c_name = ""
-	
+
 	#strings to hold the head node names
 	head_int = ""
 	head_ext = ""
@@ -110,7 +110,7 @@ class cluster_def:
 	# config file to parse, the second init throws an error #
 	# if no file name is given				#
 	#							#
-        #########################################################
+	#########################################################
 	def __init__(self, filename):
 
 		self.file = filename
@@ -147,7 +147,7 @@ class cluster_def:
 	# strips comments from front of file			#
 	#########################################################
 	def strip_comments( self ):
-	
+
 		match = self.comment.match( self.line )
 		while match:
 			self.line = self.line[match.end():]
@@ -157,7 +157,7 @@ class cluster_def:
 	# scans to next cluster in the file, if called for the  #
 	# first time goes to first cluster			#
 	# doesn't return anything, just sets internal variable	#
-	#########################################################
+ 	#########################################################
 	def get_next_cluster(self):
 
 		self.strip_comments()
@@ -217,7 +217,7 @@ class cluster_def:
 		if self.head_ext == "":
 			raise no_head_node( "no head node set.", "no cluster read yet." )
 		return self.head_ext;
-	
+
 	#########################################################
 	# returns the internal name of the current cluster 	#
 	# being parsed						#
@@ -234,7 +234,6 @@ class cluster_def:
 	# in							#
 	#########################################################
 	def get_next_node(self):
-		
 		self.strip_comments()
 
 		# the only time it is possible for this to occur is
@@ -242,7 +241,6 @@ class cluster_def:
 		if self.head_ext == None:
 			name = "cluster " + self.c_name
 			raise indirect_cluster( "indirect clusters don't have nodes", name )
-		
 		node_out = node_obj()
 
 		# when a range is specified a queue is built with the nodes
@@ -263,7 +261,7 @@ class cluster_def:
 			if match.group( "dead_node" ): # check if it is a dead node 
 				if not match.group( "range" ): # dead node qualifier invalid with a range
 					node_out.name = match.group( "comname" )
-					node_out.dead = 1        
+					node_out.dead = 1
 				else: # return the given node with a dead set to true
 					name = self.last_machine + " in " + self.c_name
 					self.reset_vars()
@@ -312,10 +310,8 @@ class cluster_def:
 				else: # single node specifier 
 					node_out.name = match.group( "comname" )
 					node_out.dead = 0
-
-
 		else: # either there are no more nodes ( closing bracket is found )
-			# or there was a parse error on the node specification line
+		      # or there was a parse error on the node specification line
 			if self.end_bracket.match( self.any_token.match(self.line).group() ):
 				raise end_of_cluster( "no more nodes in config file", None )
 			name = self.last_machine + " in " + self.c_name
