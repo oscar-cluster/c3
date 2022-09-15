@@ -305,7 +305,7 @@ try:
 					os.waitpid(pid,0)
 				for pipe in pipe_list:
 					line = os.read( pipe[0], 2000 )
-					while line[-1] != '\0':
+					while line[-1] != 0:
 						line = line + os.read( pipe[0], 2000 )
 					sys.stdout.flush()
 					
