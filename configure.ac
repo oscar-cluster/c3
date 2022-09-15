@@ -1,7 +1,8 @@
 
 dnl ===================== C3 Configure Script ======================
 
-AC_INIT([c3],[m4_esyscmd(./dist/get-version.sh ./VERSION --full | tr -d '\n')])
+AC_INIT([c3],[m4_translit(m4_esyscmd([./dist/get-version.sh ./VERSION --full]),m4_newline)])
+
 AC_CONFIG_SRCDIR([src/cexec])
 AM_INIT_AUTOMAKE
 
