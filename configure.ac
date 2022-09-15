@@ -1,7 +1,7 @@
 
 dnl ===================== C3 Configure Script ======================
 
-AC_INIT([c3], m4_esyscmd([./dist/get-version.sh ./VERSION --full | tr -d '\n']))
+AC_INIT([c3],[m4_esyscmd(./dist/get-version.sh ./VERSION --full | tr -d '\n')])
 AC_CONFIG_SRCDIR([src/cexec])
 AM_INIT_AUTOMAKE
 
@@ -11,7 +11,8 @@ AM_PATH_PYTHON([2.4])
 
 dnl ==================================================================
 
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
 
 
 dnl ============ Generate top-level C3-VERSION file ==================
