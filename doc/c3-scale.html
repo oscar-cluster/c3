@@ -1,0 +1,209 @@
+<html><head>
+
+<title>Manpage of C3-SCALE</title>
+</head><body>
+
+<h1>C3-SCALE</h1>
+Section: C3 User Manual (5)<br>Updated: 4.0<br><a href="#index">Index</a>
+<a href="C3documentation.html">Return to Main Contents</a><hr>
+
+<a name="lbAB">&nbsp;</a>
+<h2>NAME</h2>
+
+<p>
+
+<b>c3-SCALE</b> - how to configure and use C3 in it's scalable mode
+<p>
+<a name="lbAC">&nbsp;</a>
+<h2>SYNOPSIS</h2>
+
+<p>
+
+Before using C3 in the scalable execution model the user should be familiar with C3 in its non-scalable mode (<a href="c3.conf.html">C3 configuration file</a> and <a href="c3-range.html">command line ranges</a>). Both the command line interface and the configuration file have the same syntax; only the semantics of the options has changed. The standard C3 execution model is capable of controlling multiple clusters per configuration file, currently the scalable version can only control a single cluster per configuration file. 
+<a name="lbAD">&nbsp;</a>
+<h2>CONFIGURATION FILE</h2>
+While the following configuration file will work in versions of C3 prior to version 4.0 it will not execute in a scalable fashion.
+<p>
+
+cluster part1 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node1
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[1-8]
+<br>&nbsp;}
+<p>
+cluster part2 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node9
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[9-16]
+<br>&nbsp;}
+<p>
+cluster part3 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node17
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[17-24]
+<br>&nbsp;}
+<p>
+cluster part4 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node25
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[25-32]
+<br>&nbsp;}
+<p>
+cluster part5 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node33
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[33-40]
+<br>&nbsp;}
+<p>
+cluster part6 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node41
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[41-48]
+<br>&nbsp;}
+<p>
+cluster part7 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node49
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[49-56]
+<br>&nbsp;}
+<p>
+cluster part8 {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node57
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[57-64]
+<br>&nbsp;}
+<p>
+
+While the configuration file for the scalable execution model is syntactically identical to the non-scalable, the meaning of the positions have changed. The basic concept is that a single large cluster may easily be broken into several smaller clusters. The first decision a system administrator needs to make is how to logically partition the cluster. Ideally the cluster should be partitioned as close to a perfect square as possible, in our main example a 64-node cluster is divided into 8 8-way clusters. C3 easily handles up to 64 64-way clusters (4096 nodes).<br>
+<br>
+
+When a command is executed, it is &quot;staged&quot; on the node listed in the sub-cluster block's head node line. Then the command is executed on each node in the respective staging nodes block. <br>
+<br>
+
+In the above example each chunk of the cluster is defined as a direct remote cluster. One may alternatively define each as an indirect cluster, but then each staging node must have local configuration file to that sub-cluster. Using direct remote staging nodes is slightly slower but is much easier to maintain, while the indirect is faster but more difficult to maintain.<br>
+<br>
+
+One important decision to make is whether the staging node is included within its own list of responsible nodes. C3 will either execute on the compute nodes or the head-node, not both at the same time. The separation has the convenience of separating the responsibilities, but requires more commands for a full cluster execution. However, if a staging node lists itself in their responsibilities list, then a single command will run on the entire cluster. The above example the sub-cluster block includes the staging nodes in it's list of responsible nodes. This is probably the way most users would want to see the cluster, not including it is more useful to system administrators.<br>
+<br>
+
+Physical layout of the cluster may impact the ordering of the nodes. Ideally each cluster block would be within a single switch, including the head node of that cluster block. This is because intra-switch communication is very fast. For example, if each switch only contains 32 ports then each block should not contain more than 1 staging node and 31 compute nodes - with each of those nodes physically connected to the same switch. It is not as important that the staging nodes all be connected to the same switch as the head node used to initiate the C3 command, though it would also speed execution. It is not recommended that each node service more than 64 nodes unless absolutely necessary.
+<a name="lbAE">&nbsp;</a>
+<h2>USAGE</h2>
+
+<p>
+
+These examples will assume that the staging node includes itself in the responsibilities list. In the case where it is not included it would require an extra command so that the execution will take place on both the staging nodes and it's list of responsibilities.
+
+
+The most important option common throughout the C3 commands is the --all option. This option tells C3 to execute the given command on each and every cluster and node in the configuration file. It is recommended that the most commonly used or perhaps all of the C3 command be aliased to &quot;command --all&quot; for convenience. The following command will push /etc/passwd to every node in the scalable cluster:
+<dl compact>
+<dt><dd>
+<b>cpush --all /etc/passwd</b>
+</dl>
+<p>
+
+The other option is to explicitly list each sub-cluster on the command line. However, for large clusters this would be quite cumbersome if not impossible to do without human error.
+
+
+At this point using ranges on a scalable cluster is not as clean as using them on a non-scalable cluster. Because &quot;node48&quot; could be in any of the sub-clusters, or &quot;node35-64&quot; may cross several sub-cluster boundaries. These must be explicitly searched on and explicitly stated on the command line. For example searching in the first scalable configuration file:
+<dl compact>
+<dt><dd>
+<b>cname --all node48 node35 node64</b>
+</dl>
+<p>
+
+will return node 48 in part6 position 7, node35 in part5 position 1, node64 in part8 position 8. To execute on node48 use:
+<dl compact>
+<dt><dd>
+<b>cexec part6:7 hostname</b>
+</dl>
+<p>
+
+to execute on 35-64 use:
+<dl compact>
+<dt><dd>
+<b>cexec part5:1-7 part6: part7: part8: hostname</b>
+</dl>
+<a name="lbAF">&nbsp;</a>
+<h2>MISC</h2>
+
+<p>
+
+Two commands currently do not gain any benefit from the scalable execution model. Cpushimage will not function properly - specifically it will fail. Currently SystemImager, used by cpushimage, does not support staging of images on other machines. However, is possible to create a staging node image that contains the standard nodes' image and then push that image to only the staging nodes. Next, tell each of the staging nodes to propagate that image to the nodes in their list of responsibilities. This process will result in all nodes receiving their image. While this gains the parallelism of the scalable execution model it takes a significant amount of disk space and is difficult to maintain. The server must maintain three complete images; it's own operating image, a staging nodes image, and a compute node's image. These images must be maintained correctly or the entire cluster may have system errors as a result of a cpushimage. For example: to get the first set of images:
+<dl compact>
+<dt>1<dd>
+build compute nodes.
+<dt>2<dd>
+build staging nodes.
+<dt>3<dd>
+take compute node image on staging nodes.
+<dt>4<dd>
+take staging node image on head-node.
+
+
+This must be repeated for every change required in the stable image. Next, to propagate an image out to the cluster will require:
+<dt><dd>
+<br><b>cpushimage --all --head staging_image</b>
+</dl>
+<p>
+
+This will update all the staging nodes with the image &quot;staging_image&quot; stored on the local machine. Next, to push &quot;node_image&quot; to all the nodes in their respective staging node responsibilities list
+<dl compact>
+<dt><dd>
+<b>cpushimage --all node_image</b>
+</dl>
+<p>
+
+Here, it is extremely important that the staging nodes are not included in their lists of responsibilities. The effect of cpushimage will be random if the staging node includes itself in its list of responsibilities. The result will depend on when the process was started and when the image update is applied to the image storage area. the new update will delete the information being synchronized during the rsync operation.
+
+
+The other command that will not benefit from the scalable execution model is cget. Cget will still function properly, however it will probably not gain much parallelism, as it is a gather operation with many machines communicating to a single machine. 
+<a name="lbAG">&nbsp;</a>
+<h2>SEE ALSO</h2>
+
+<a href="cexec.html">cexec</a>(1), <a href="c3.html">c3</a>(1), <a href="cget.html">cget</a>(1), <a href="ckill.html">ckill</a>(1), <a href="cpush.html">cpush</a>(1
+), <a href="cpushimage.html">cpushimage</a>(4), <a href="crm.html">crm</a>(1), <a href="cshutdown.html">cshutdown</a>(4), <a href="cname.html">cname</a>(1), <a href="cnum.html">cnum</a>(1), <a href="clist.html">clist</a>(1), <a href="c3.conf.html">c3.conf</a>(5), <a href="c3-scale.html">c3-scale</a>(5)
+
+<p>
+
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
+<dl>
+<dt><a href="#lbAB">NAME</a><dd>
+<dt><a href="#lbAC">SYNOPSIS</a><dd>
+<dt><a href="#lbAD">CONFIGURATION FILE</a><dd>
+<dt><a href="#lbAE">USAGE</a><dd>
+<dt><a href="#lbAF">MISC</a><dd>
+<dt><a href="#lbAG">SEE ALSO</a><dd>
+</dl>
+<hr>
+<!-- FOOTER -->
+<hr>
+<center>
+<br>
+<font size="4">
+<b>
+  <a href="http://www.csm.ornl.gov/srt/">SRT</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="http://www.csm.ornl.gov/torc/">TORC</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="index.html">C3 Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3softwarepage.html">Download</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="C3notespage.html">Notes</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="C3documentation.html">Documentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3paperspage.html">Papers</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3peoplepage.html">Contacts</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3relatedresearch.html">Related Research</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</b>
+</font>
+</center>
+
+<hr>
+
+<font size="3">
+For user questions and information about releases, email/subscribe to:
+<a href="https://elist.ornl.gov/mailman/listinfo/c3-users">c3-users</a>
+<br>
+For report bugs or problem, e-mail: <a href="mailto:c3-devel@ornl.gov">c3-devel@ornl.gov</a>
+<br><br>
+<i><a href="http://www.csm.ornl.gov/">Computer Science and Math Division</a></i><br>
+<i><a href="http://www.ornl.gov/">Oak Ridge National Laboratory</a></i><br>
+
+</font>
+
+<i>
+Last Modified: 
+               Sun  04-10-2022
+</i>
+</body>
+</html>
