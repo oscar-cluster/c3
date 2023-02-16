@@ -272,13 +272,13 @@ any wildcards if no target was specified.
 	except KeyError:
 		defusername = os.environ[ 'USER' ]
 	#######################################################
-        ######### set filename  ##########################
-        if not file_set:
-                try:
-                        filename = os.environ[ 'C3_CONF' ]
-                except KeyError:
-                        filename = '/etc/c3.conf'
-        #######################################################
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
 
 
 	######### make cluster list object from file ##########
@@ -353,13 +353,13 @@ any wildcards if no target was specified.
 
 
 
-        while interactive: # if interactive execution, prompt once before executing
-                answer = input( "push " + source + " to " + target + " :" )
-                if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
-                        sys.exit()
-                if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
-                        interactive = 0
-		
+	while interactive: # if interactive execution, prompt once before executing
+		answer = input( "push " + source + " to " + target + " :" )
+		if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
+			sys.exit()
+		if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
+			interactive = 0
+
 
 	pid_list_outer = []
 

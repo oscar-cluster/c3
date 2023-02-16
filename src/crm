@@ -158,13 +158,13 @@ try:
 		defusername = os.environ[ 'USER' ]
 	#######################################################
 
-        ######### set filename  ##########################
-        if not file_set:
-                try:
-                        filename = os.environ[ 'C3_CONF' ]
-                except KeyError:
-                        filename = '/etc/c3.conf'
-        #######################################################
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
 
 
 	######### make cluster list object from file ##########
@@ -241,12 +241,12 @@ try:
 
 
 
-        while interactive: # if interactive execution, prompt once before executing
+	while interactive: # if interactive execution, prompt once before executing
 		answer = input( "delete the following patterns(y or n): " + " ".join(pattern) + " :" )
 		if re.compile( r".*n(o)?.*", re.IGNORECASE ).match( answer ):
-                        sys.exit(c3_config.C3_OKEXIT)
-                if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
-                        interactive = 0
+			sys.exit(c3_config.C3_OKEXIT)
+		if re.compile( r".*y(es)?.*", re.IGNORECASE).match( answer ):
+			interactive = 0
 		
 
 

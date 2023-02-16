@@ -124,20 +124,20 @@ try:
 		transport = 'ssh'
 	#######################################################
 
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
+
 	######### set default user name #######################
-        try:
-                defusername = os.environ[ 'C3_USER' ]
-        except KeyError:
-                defusername = os.environ[ 'USER' ]
+	try:
+		defusername = os.environ[ 'C3_USER' ]
+	except KeyError:
+		defusername = os.environ[ 'USER' ]
 
-
-        ######### set filename  ##########################
-        if not file_set:
-                try:
-                        filename = os.environ[ 'C3_CONF' ]
-                except KeyError:
-                        filename = '/etc/c3.conf'
-        #######################################################
 
 
 	######### make cluster list object from file ##########

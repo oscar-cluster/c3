@@ -63,13 +63,13 @@ try:
 	except c3_com_obj.end_of_option:
 		pass
 
-        ######### set filename  ##########################
-        if not file_set:
-                try:
-                        filename = os.environ[ 'C3_CONF' ]
-                except KeyError:
-                        filename = '/etc/c3.conf'
-        #######################################################
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
 
 	######### make cluster list object from file ##########
 	try: # open file & initialize file parser
