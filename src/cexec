@@ -300,7 +300,7 @@ try:
 							  stdout=PIPE, stderr=STDOUT, close_fds=True)
 					string_in = p.communicate()[0]
 					temp = p.wait()
-                    string_in = str(string_in,'utf8')
+					string_in = str(string_in,'utf8')
 					if( temp != 0 ):
 						returncode = c3_config.C3_ERRREMOTE
 					if pipe_output:
@@ -337,7 +337,7 @@ try:
 											p = Popen(string_to_execute, shell=True, 
 							  						  stdout=PIPE, stderr=STDOUT, close_fds=True)
 											string_in = p.communicate()[0]
-                                            string_in = str(string_in,'utf8')
+											string_in = str(string_in,'utf8')
 											temp = p.wait()
 											if( temp != 0 ):
 												returncode = c3_config.C3_ERRREMOTE
@@ -375,7 +375,7 @@ try:
 							  				  stdout=PIPE, stderr=STDOUT, close_fds=True)
 									string_in = p.communicate()[0]
 									temp = p.wait()
-                                    string_in = str(string_in, 'utf8')
+									string_in = str(string_in, 'utf8')
 									if( temp != 0 ):
 										returncode = c3_config.C3_ERRREMOTE
 									if pipe_output:
