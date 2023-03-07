@@ -296,8 +296,8 @@ try:
 					#proc =  popen2.Popen4(string_to_execute)
 					#string_in = proc.fromchild.read()
 					#temp = proc.wait()
-					p = Popen(string_to_execute, shell=True, 
-							  stdout=PIPE, stderr=STDOUT, close_fds=True)
+					p = Popen(string_to_execute, shell=True,
+							stdout=PIPE, stderr=STDOUT, close_fds=True)
 					string_in = p.communicate()[0]
 					temp = p.wait()
 					string_in = str(string_in,'utf8')
@@ -334,8 +334,8 @@ try:
 											#proc = popen2.Popen4(string_to_execute)
 											#string_in = proc.fromchild.read()
 											#temp = proc.wait()
-											p = Popen(string_to_execute, shell=True, 
-							  						  stdout=PIPE, stderr=STDOUT, close_fds=True)
+											p = Popen(string_to_execute, shell=True,
+													stdout=PIPE, stderr=STDOUT, close_fds=True)
 											string_in = p.communicate()[0]
 											string_in = str(string_in,'utf8')
 											temp = p.wait()
@@ -366,28 +366,29 @@ try:
 									string_to_execute = transport + " " + "-l " + username + " " + node_name + " \'" +  command + " \'"
 									if dryrun:
 										print(string_to_execute)
-										os._exit(c3_config.C3_OKEXIT)
-									##fd = os.popen(string_to_execute)
-									#proc = popen2.Popen4(string_to_execute)
-									#string_in = proc.fromchild.read()
-									#temp = proc.wait()
-									p = Popen(string_to_execute, shell=True, 
-							  				  stdout=PIPE, stderr=STDOUT, close_fds=True)
-									string_in = p.communicate()[0]
-									temp = p.wait()
-									string_in = str(string_in, 'utf8')
-									if( temp != 0 ):
-										returncode = c3_config.C3_ERRREMOTE
-									if pipe_output:
-										regex = re.compile(r"^.", re.MULTILINE)
-										string_in = regex.sub(cluster + " " + node_name + ": " + "\g<0>", string_in)
-										if len (string_in) == 0:
-											string_in = cluster + " " + node_name+ ":\n"
-									os.write( pipe_list[-1][1], string_in.encode('utf8') )
-									os.write( pipe_list[-1][1], b'\0' )
+									else:
+										##fd = os.popen(string_to_execute)
+										#proc = popen2.Popen4(string_to_execute)
+										#string_in = proc.fromchild.read()
+										#temp = proc.wait()
+										p = Popen(string_to_execute, shell=True,
+												stdout=PIPE, stderr=STDOUT, close_fds=True)
+										string_in = p.communicate()[0]
+										temp = p.wait()
+										string_in = str(string_in, 'utf8')
+										if( temp != 0 ):
+											returncode = c3_config.C3_ERRREMOTE
+										if pipe_output:
+											regex = re.compile(r"^.", re.MULTILINE)
+											string_in = regex.sub(cluster + " " + node_name + ": " + "\g<0>", string_in)
+											if len (string_in) == 0:
+												string_in = cluster + " " + node_name+ ":\n"
+										os.write( pipe_list[-1][1], string_in.encode('utf8') )
+										os.write( pipe_list[-1][1], b'\0' )
 									os._exit(returncode)
-									
 								pidlist.append(pid)
+						if dryrun:
+							os._exit(c3_config.C3_OKEXIT)
 					for pipe in pipe_list:
 						line = os.read( pipe[0], 1024)
 						while line[-1] != 0:
@@ -457,8 +458,8 @@ try:
 							#proc = popen2.Popen4(string_to_execute)
 							#string_in = proc.fromchild.read()
 							#temp = proc.wait()
-							p = Popen(string_to_execute, shell=True, 
-							  		  stdout=PIPE, stderr=STDOUT, close_fds=True)
+							p = Popen(string_to_execute, shell=True,
+									stdout=PIPE, stderr=STDOUT, close_fds=True)
 							string_in = p.communicate()[0]
 							temp = p.wait()
 							if( temp != 0 ):
@@ -500,8 +501,8 @@ try:
 							#proc = popen2.Popen4(string_to_execute)
 							#string_in = proc.fromchild.read()
 							#temp = proc.wait()
-							p = Popen(string_to_execute, shell=True, 
-							  		  stdout=PIPE, stderr=STDOUT, close_fds=True)
+							p = Popen(string_to_execute, shell=True,
+									stdout=PIPE, stderr=STDOUT, close_fds=True)
 							string_in = p.communicate()[0]
 							temp = p.wait()
 							if( temp != 0 ):
@@ -524,11 +525,12 @@ try:
 				line = line + os.read( pipe[0], 1024 )
 			output = output + line[:-1].decode('utf8')
 		try:
+			output = output.encode('utf8')
 			n = len(output)
 			iw = 0
 			while n != iw:
 				try:
-					slice = output[iw:n].encode('utf8')
+					slice = output[iw:n]
 					nw = os.write(sys.stdout.fileno(), slice)
 					iw = iw + nw
 				except OSError as err:
