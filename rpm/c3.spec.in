@@ -189,6 +189,12 @@ fi
 # ChangeLog section
 #---------------------------------------------------------------------
 %changelog
+* Tue Mar  7 2023  12:08:52PM    Olivier Lahaye <olivier.lahaye@cea.fr>
+- Python3 version
+
+* Thu Sep 15 2022  11:42:29AM    Olivier Lahaye <olivier.lahaye@cea.fr>
+- Python3 version
+
 * Thu Oct 03 2013  16:19:19PM    Olivier Lahaye <olivier.lahaye@cea.fr>
 - Specfile cleanup.
 - Avoid owning /usr/bin (conflict with filesystem package).
