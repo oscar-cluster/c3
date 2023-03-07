@@ -300,12 +300,13 @@ try:
 							  stdout=PIPE, stderr=STDOUT, close_fds=True)
 					string_in = p.communicate()[0]
 					temp = p.wait()
+                    string_in = str(string_in,'utf8')
 					if( temp != 0 ):
 						returncode = c3_config.C3_ERRREMOTE
 					if pipe_output:
 						regex = re.compile(r"^.", re.MULTILINE)
 						string_in = regex.sub(cluster + " " + ext_ip_name + ": " + "\g<0>", string_in)
-					os.write(pipe_list_outer[-1][1], string_in + b'\0')
+					os.write(pipe_list_outer[-1][1], string_in.encode('utf8') + b'\0')
 					
 			elif cluster_from_file[cluster]['external']: # if a direct cluster
 				if ext_ip == local_ip or int_ip == local_ip: # if a local cluster
@@ -336,6 +337,7 @@ try:
 											p = Popen(string_to_execute, shell=True, 
 							  						  stdout=PIPE, stderr=STDOUT, close_fds=True)
 											string_in = p.communicate()[0]
+                                            string_in = str(string_in,'utf8')
 											temp = p.wait()
 											if( temp != 0 ):
 												returncode = c3_config.C3_ERRREMOTE
@@ -344,7 +346,7 @@ try:
 												string_in = regex.sub(cluster + " " + node_name + ": " + "\g<0>", string_in)
 												if len (string_in) == 0:
 													string_in = cluster + " " + node_name+ ":\n"
-											os.write( pipe_list[-1][1], string_in )
+											os.write( pipe_list[-1][1], string_in.encode('utf8') )
 											os.write( pipe_list[-1][1], b'\0' )
 										os._exit(returncode)
 									pidlist.append(pid)
@@ -373,6 +375,7 @@ try:
 							  				  stdout=PIPE, stderr=STDOUT, close_fds=True)
 									string_in = p.communicate()[0]
 									temp = p.wait()
+                                    string_in = str(string_in, 'utf8')
 									if( temp != 0 ):
 										returncode = c3_config.C3_ERRREMOTE
 									if pipe_output:
@@ -380,7 +383,7 @@ try:
 										string_in = regex.sub(cluster + " " + node_name + ": " + "\g<0>", string_in)
 										if len (string_in) == 0:
 											string_in = cluster + " " + node_name+ ":\n"
-									os.write( pipe_list[-1][1], string_in )
+									os.write( pipe_list[-1][1], string_in.encode('utf8') )
 									os.write( pipe_list[-1][1], b'\0' )
 									os._exit(returncode)
 									
