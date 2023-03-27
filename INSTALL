@@ -157,25 +157,24 @@ B. C3 install
 
 	
        You can install the packages using 'apt-get' from
-       online repositories by adding the following to your 
-       '/etc/apt/sources.list' file for the appropriate version/release, 
+       online repositories by creating OSCAR cluster source list
+       '/etc/apt/sources.list.d/oscar.list' file for the appropriate version/release, 
 	   
- deb http://code.csm.ornl.gov/software/repos/stable/<distro_id> <release_name> /
+ deb http://code.csm.ornl.gov/software/repos/stable/<distro_id> <release_name> main
 
        where <distro_id> refers to the Debian distribution your local
        Debian based distribution is compatible with. The support distro, and
        the respective distro_id, are:
-           - debian 5     for x86_64 architecture: debian-5-x86_64
-           - ubuntu 10.10 for x86_64 architecture: debian-5-x86_64
-           - debian 6     for x86_64 architecture: debian-6-x86_64
-           - ubuntu 12.04 for x86_64 architecture: debian-6-x86_64
-           - ubuntu 12.10 for x86_64 architecture: debian-6-x86_64
+           - debian 10    for x86_64 architecture: debian-10-x86_64
+           - debian 11    for x86_64 architecture: debian-11-x86_64
+           - ubuntu 20.04 for x86_64 architecture: debian-11-x86_64
+           - ubuntu 20.10 for x86_64 architecture: debian-11-x86_64
        For other Debian based distribution, you may install C3 from sources.
 
-       For example, on a x86_64 Debian 6.0 ("squeeze") distribution the 
+       For example, on a x86_64 Debian 11 ("bullseye") distribution the 
        line would look like the following:
 
- deb http://code.csm.ornl.gov/software/repos/stable/debian-6-x86_64  squeeze /
+ deb [signed-by=/usr/share/keyrings/oscar-archive-keyring.gpg] http://olivier.lahaye1.free.fr/OSCAR/repos/unstable/debian-11-x86_64 bullseye main
 
 
 	   Then run the following command,
@@ -234,38 +233,24 @@ B. C3 install
 
 
 
-        To configure YUM for online installation, create a 
-        "CSM-ORNL.repo" file in the /etc/yum.repos.d directory.
+        To configure YUM or DNF for online installation,
+        Install the oscar-release rpm that matches your distro from
+		http://olivier.lahaye1.free.fr/OSCAR/repos/unstable/
 
-        To use the stable repository, the content of the file should look 
-        like the following, where <ARCH> is either x86 or x86_64:
+        You can also create your repo file by hand like this
+		icreate the following file: /etc/yum.repo.d/oscar.repo
+		and add the following content:
 
-    # CentOS-CSMORNL.repo
+    # OSCAR.repo
     #
     # If the mirrorlist= does not work for you, as a fall back you can try the 
     # remarked out baseurl= line instead.
     #
     #
-    [csm]
-    name=CentOS-$releasever - CSM_ORNL
-    baseurl=http://code.csm.ornl.gov/software/repos/stable/rhel-5-<ARCH>
+    [oscar]
+    name=CentOS-$releasever - OSCAR
+    baseurl=http://olivier.lahaye1.free.fr/OSCAR/repos/unstable/<distro_id>
     gpgcheck=0
-
-
-        To use the unstable repository, the content of the file should look 
-        like the following, where <ARCH> is either x86 or x86_64:
-
-    # CentOS-CSMORNL.repo
-    #
-    # If the mirrorlist= does not work for you, as a fall back you can try the
-    # remarked out baseurl= line instead.
-    #
-    #
-    [csm]
-    name=CentOS-$releasever - CSM_ORNL
-    baseurl=http://code.csm.ornl.gov/software/repos/unstable/rhel-5-<ARCH>
-    gpgcheck=0
-
 
 
 C. C3 configuration
