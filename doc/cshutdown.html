@@ -1,0 +1,249 @@
+<html><head>
+
+<title>Manpage of CSHUTDOWN</title>
+</head><body>
+
+<h1>CSHUTDOWN</h1>
+Section: C3 User Manual (4)<br>Updated: 4.0<br><a href="#index">Index</a>
+<a href="C3documentation.html">Return to Main Contents</a><hr>
+
+<a name="lbAB">&nbsp;</a>
+<h2>NAME</h2>
+
+<p>
+
+<b>cshutdown</b> - A utility that runs shutdown on each cluster node.
+<p>
+<p>
+<a name="lbAC">&nbsp;</a>
+<h2>SYNOPSIS</h2>
+
+<p>
+
+Usage: <b>cshutdown</b> [OPTIONS] [MACHINE DEFINITIONS] t <i>time</i> [warning-message]
+<a name="lbAD">&nbsp;</a>
+<h2>DESCRIPTION</h2>
+
+<p>
+
+<b>cshutdown</b> executes 'shutdown' with the given options and time on each cluster node.
+<a name="lbAE">&nbsp;</a>
+<h2>OPTIONS</h2>
+
+<p>
+
+<dl compact>
+<dt><b>--help -h</b><dd>
+:display help message
+<p>
+<dt><b>--file -f</b><dd>
+:alternate cluster configuration file if one is not supplied then <i>/etc/c3.conf</i> will be used
+<p>
+<dt><b>-i</b><dd>
+:interactive mode, ask once before executing
+<p>
+<dt><b>--head</b><dd>
+:execute command on head node does not execute on compute nodes if specified
+<p>
+<dt><b>-a</b><dd>
+:Use /etc/shutdown.allow.
+<p>
+<dt><b>-t sec</b><dd>
+:Tell init(8) to wait sec seconds between sending processes the warning and the kill  signal,  before changing to another runlevel.
+<p>
+<dt><b>-k</b><dd>
+:Don't really shutdown; only send the warning messages to everybody.
+<p>
+<dt><b>-r</b><dd>
+:reboot after shutdown.
+<p>
+<dt><b>-H</b><dd>
+:Halt after shutdown.
+<p>
+<dt><b>-sF</b><dd>
+:Skip fsck on reboot.
+<p>
+<dt><b>-F</b><dd>
+:Force fsck on reboot.
+<p>
+<dt><b>-c</b><dd>
+:Cancel an already running shutdown.
+<p>
+<dt><b>--onreboot</b><dd>
+:reboot to specified lilo label
+<p>
+<dt><b>--all</b><dd>
+:execute command on all nodes in all clusters that are accessible. When specifying <b>--head</b> only the head nodes will participate. This ignores the [MACHINE_DEFINITIONS] section.
+</dl>
+<a name="lbAF">&nbsp;</a>
+<h2>GENERAL</h2>
+
+<p>
+
+There are many ways to call cshutdown only a few examples are shown:
+
+
+<p>
+
+1. To shutdown the default cluster:
+<dl compact>
+<dt><dd>
+<b>cshutdown -t 0</b>
+<dt><dd><br>
+Shutsdown the nodes immediately
+<p>
+</dl>
+<p>
+
+2. to reboot the cluster to another lilo label
+<dl compact>
+<dt><dd>
+<b>cshutdown --onreboot w2k 0 rebooting to windows 2000 now!</b>
+<dt><dd><br>
+This command tells lilo when it reboots to use the given label for the next reboot only. this is useful for things like the above example, to reboot to windows 2000
+<p>
+</dl>
+<p>
+
+3. To shutdown several clusters
+<dl compact>
+<dt><dd>
+<b>cshutdown -k cluster1: cluster2: -t 5 system going down for updates</b>
+<dt><dd><br>
+This will tell shutdown to send the following message but not really shutdown. Most of the options to shutdown(8) will work in cshutdown
+</dl>
+<a name="lbAG">&nbsp;</a>
+<h2>SETUP</h2>
+
+<p>
+
+See the C3 INSTALL file for installation instructions. Also see C3-range for help on node ranges on the command line. If using the scalable setup please see c3-scale
+<p>
+<a name="lbAH">&nbsp;</a>
+<h2>ENVIRONMENT</h2>
+
+<p>
+
+C3_RSH
+<dl compact>
+<dt><dd>
+By default, the C3 tools will use ssh to issue the remote commands. If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh. 
+<dt><dd>
+For example, if you are using the bash shell you would do the following:
+<dt><dd><br>
+<b>export C3_RSH=rsh</b>
+<dt><dd><br>
+any program that behaves like rsh or ssh is acceptable
+<p>
+</dl>
+<p>
+
+C3_PATH
+<dl compact>
+<dt><dd>
+The default install path for C3 is /opt/c3-4. If you install C3 in an alternate location this variable must point to that installation. For remote clusters C3 must be installed in the same directory on each cluster. 
+<dt><dd>
+For example, if you installed C3 in your home directory you might use the following:
+<dt><dd><br>
+<b>export C3_PATH=/home/sgrundy/c3-4</b>
+<dt><dd><br>
+<p>
+</dl>
+<p>
+
+C3_CONF
+<dl compact>
+<dt><dd>
+C3's default configuration file is /etc/c3.conf. If you wish an alternate default configuration file set this to point to the file
+<dt><dd>
+For example, if you keep a special c3.conf file in your home directory you may use:
+<dt><dd><br>
+<b>export C3_CONF=/home/sgrundy/.c3conf</b>
+<dt><dd><br>
+<p>
+</dl>
+<p>
+
+C3_USER
+<dl compact>
+<dt><dd>
+By default, the C3 tools will use your local username to access a remote cluster. If you wish to use a different default then set this variable to it
+<dt><dd>
+For example, this will change the example user from sgrundy to mmanhunter:
+<dt><dd><br>
+<b>export C3_USER=mmanhunter</b>
+<dt><dd><br>
+</dl>
+<a name="lbAI">&nbsp;</a>
+<h2>FILES</h2>
+
+<p>
+
+<b></b><i>/etc/c3.conf</i>
+<dl compact>
+<dt><dd>
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent. The cluster configuration file of nodes may also be specified from the command line. The format of both files is identical.
+<dt><dd>
+See the <a href="c3.conf.html">c3.conf</a>(5) man page for format
+</dl>
+<a name="lbAJ">&nbsp;</a>
+<h2>SEE ALSO</h2>
+
+<a href="cexec.html">cexec</a>(1), <a href="c3.html">c3</a>(1), <a href="cget.html">cget</a>(1), <a href="ckill.html">ckill</a>(1), <a href="cpush.html">cpush</a>(1
+), <a href="cpushimage.html">cpushimage</a>(4), <a href="crm.html">crm</a>(1), <a href="cshutdown.html">cshutdown</a>(4), <a href="cname.html">cname</a>(1), <a href="cnum.html">cnum</a>(1), <a href="clist.html">clist</a>(1), <a href="c3.conf.html">c3.conf</a>(5), <a href="c3-scale.html">c3-scale</a>(5)
+
+<p>
+
+
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
+<dl>
+<dt><a href="#lbAB">NAME</a><dd>
+<dt><a href="#lbAC">SYNOPSIS</a><dd>
+<dt><a href="#lbAD">DESCRIPTION</a><dd>
+<dt><a href="#lbAE">OPTIONS</a><dd>
+<dt><a href="#lbAF">GENERAL</a><dd>
+<dt><a href="#lbAG">SETUP</a><dd>
+<dt><a href="#lbAH">ENVIRONMENT</a><dd>
+<dt><a href="#lbAI">FILES</a><dd>
+<dt><a href="#lbAJ">SEE ALSO</a><dd>
+</dl>
+<hr>
+<!-- FOOTER -->
+<hr>
+<center>
+<br>
+<font size="4">
+<b>
+  <a href="http://www.csm.ornl.gov/srt/">SRT</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="http://www.csm.ornl.gov/torc/">TORC</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="index.html">C3 Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3softwarepage.html">Download</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="C3notespage.html">Notes</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="C3documentation.html">Documentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3paperspage.html">Papers</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3peoplepage.html">Contacts</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3relatedresearch.html">Related Research</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</b>
+</font>
+</center>
+
+<hr>
+
+<font size="3">
+For user questions and information about releases, email/subscribe to:
+<a href="https://elist.ornl.gov/mailman/listinfo/c3-users">c3-users</a>
+<br>
+For report bugs or problem, e-mail: <a href="mailto:c3-devel@ornl.gov">c3-devel@ornl.gov</a>
+<br><br>
+<i><a href="http://www.csm.ornl.gov/">Computer Science and Math Division</a></i><br>
+<i><a href="http://www.ornl.gov/">Oak Ridge National Laboratory</a></i><br>
+
+</font>
+
+<i>
+Last Modified: 
+               Sun  04-10-2022
+</i>
+</body>
+</html>

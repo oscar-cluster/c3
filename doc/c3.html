@@ -1,0 +1,189 @@
+<html><head>
+
+<title>Manpage of C3</title>
+</head><body>
+
+<h1>C3</h1>
+Section: Cluster Command &amp; Control (C3) Tool Suite (1)<br>Updated: <br><a href="#index">Index</a>
+<a href="C3documentation.html">Return to Main Contents</a><hr>
+
+<a name="lbAB">&nbsp;</a>
+<h2>DESCRIPTION</h2>
+
+The Cluster Command Control (C3) tools are a suite of cluster tools developed at Oak Ridge National Laboratory that are useful for both administration and application support. The suite includes tools for cluster-wide command execution, file distribution and gathering, process termination, remote shutdown and restart, and system image updates. A short description of each tool follows:
+
+
+<p>
+
+cexec - general utility that enables the execution of any standard command on all cluster nodes
+
+
+<p>
+
+cget - retrieves files or directories from all cluster nodes
+
+
+<p>
+
+ckill - terminates a user specified process on all cluster nodes
+
+
+<p>
+
+cpush - distribute files or directories to all cluster nodes
+
+
+<p>
+
+cpushimage - update the system image on all cluster nodes using an image captured by the SystemImager tool
+
+
+<p>
+
+crm - remove files or directories from all cluster nodes
+
+
+<p>
+
+cshutdown - shutdown or restart all cluster nodes
+
+
+<p>
+
+The default method of execution for the tools is to run the command on all cluster nodes concurrently. However, a serial version of cexec is also provided that may be useful for deterministic execution and debugging. To invoke the serial version of cexec, type cexecs instead of cexec.
+
+
+<p>
+
+For more information on how to use each tool, see the man page for the specific tool.
+<p>
+<p>
+<p>
+<a name="lbAC">&nbsp;</a>
+<h2>ENVIRONMENT</h2>
+
+<p>
+
+C3_RSH
+<dl compact>
+<dt><dd>
+By default, the C3 tools will use ssh to issue the remote commands. If you would like to have them use rsh instead, you must set the C3_RSH environment variable to rsh. 
+<dt><dd>
+For example, if you are using the bash shell you would do the following:
+<br><br>
+<dt><dd>
+<b>export C3_RSH=rsh</b>
+<dt><dd>
+<br>
+any program that behaves like rsh or ssh is acceptable
+<p>
+</dl>
+<p>
+
+C3_PATH
+<dl compact>
+<dt><dd>
+The default install path for C3 is /opt/c3-4. If you install C3 in an alternate location this variable must point to that installation. For remote clusters C3 must be installed in the same directory on each cluster. 
+<dt><dd>
+For example, if you installed C3 in your home directory you might use the following:
+<br><br>
+<dt><dd>
+<b>export C3_PATH=/home/sgrundy/c3-4</b>
+<dt><dd>
+<br>
+<p>
+</dl>
+<p>
+
+C3_CONF
+<dl compact>
+<dt><dd>
+C3's default configuration file is /etc/c3.conf. If you wish an alternate default configuration file set this to point to the file
+<dt><dd>
+For example, if you keep a special c3.conf file in your home directory you may use:
+<br><br>
+<dt><dd>
+<b>export C3_CONF=/home/sgrundy/.c3conf</b>
+<dt><dd>
+<br>
+<p>
+</dl>
+<p>
+
+C3_USER
+<dl compact>
+<dt><dd>
+By default, the C3 tools will use your local username to access a remote cluster. If you wish to use a different default then set this variable to it
+<dt><dd>
+For example, this will change the example user from sgrundy to mmanhunter:
+<br><dt><dd><br>
+<b>export C3_USER=mmanhunter</b>
+<dt><dd><br>
+</dl>
+<a name="lbAD">&nbsp;</a>
+<h2>FILES</h2>
+
+<p>
+
+<i>/etc/c3.conf</i>
+<dl compact>
+<dt><dd>
+This file is the cluster configuration file which the tools use to access the cluster. The cluster configuration file may also be specified from the command line. The format of both files is identical.
+<dt><dd>
+see the c3.conf man page for details
+</dl>
+<a name="lbAE">&nbsp;</a>
+<h2>SEE ALSO</h2>
+
+<a href="cexec.html">cexec</a>(1), <a href="c3.html">c3</a>(1), <a href="cget.html">cget</a>(1), <a href="ckill.html">ckill</a>(1), <a href="cpush.html">cpush</a>(1
+), <a href="cpushimage.html">cpushimage</a>(4), <a href="crm.html">crm</a>(1), <a href="cshutdown.html">cshutdown</a>(4), <a href="cname.html">cname</a>(1), <a href="cnum.html">cnum</a>(1), <a href="clist.html">clist</a>(1), <a href="c3.conf.html">c3.conf</a>(5), <a href="c3-scale.html">c3-scale</a>(5)
+
+<p>
+
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
+<dl>
+<dt><a href="#lbAB">DESCRIPTION</a><dd>
+<dt><a href="#lbAC">ENVIRONMENT</a><dd>
+<dt><a href="#lbAD">FILES</a><dd>
+<dt><a href="#lbAE">SEE ALSO</a><dd>
+</dl>
+<hr>
+<!-- FOOTER -->
+<hr>
+<center>
+<br>
+<font size="4">
+<b>
+  <a href="http://www.csm.ornl.gov/srt/">SRT</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="http://www.csm.ornl.gov/torc/">TORC</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="index.html">C3 Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3softwarepage.html">Download</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="C3notespage.html">Notes</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="C3documentation.html">Documentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3paperspage.html">Papers</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3peoplepage.html">Contacts</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3relatedresearch.html">Related Research</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</b>
+</font>
+</center>
+
+<hr>
+
+<font size="3">
+For user questions and information about releases, email/subscribe to:
+<a href="https://elist.ornl.gov/mailman/listinfo/c3-users">c3-users</a>
+<br>
+For report bugs or problem, e-mail: <a href="mailto:c3-devel@ornl.gov">c3-devel@ornl.gov</a>
+<br><br>
+<i><a href="http://www.csm.ornl.gov/">Computer Science and Math Division</a></i><br>
+<i><a href="http://www.ornl.gov/">Oak Ridge National Laboratory</a></i><br>
+
+</font>
+
+<i>
+Last Modified: 
+               Sun  04-10-2022
+</i>
+</body>
+</html>

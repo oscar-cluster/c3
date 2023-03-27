@@ -25,11 +25,11 @@ try:
 	backslash = re.compile( r"\\" )
 	#######################################################
 
-        ######## check for arguments  #########################
-        if len(sys.argv) == 1:
-                print(help_info)
-                sys.exit(c3_config.C3_OKEXIT)
-        #######################################################
+	######## check for arguments  #########################
+	if len(sys.argv) == 1:
+		print(help_info)
+		sys.exit(c3_config.C3_OKEXIT)
+	#######################################################
 
 
 	######### et default options  #########################
@@ -123,14 +123,13 @@ try:
 	except KeyError:
 		defusername = os.environ['USER']
 	#######################################################
-        ######### set filename  ##########################
-        if not file_set:
-                try:
-                        filename = os.environ[ 'C3_CONF' ]
-                except KeyError:
-                        filename = '/etc/c3.conf'
-        #######################################################
-
+	######### set filename  ##########################
+	if not file_set:
+		try:
+			filename = os.environ[ 'C3_CONF' ]
+		except KeyError:
+			filename = '/etc/c3.conf'
+	#######################################################
 
 	######### make cluster list object from file ##########
 	try: # open file & initialize file parser

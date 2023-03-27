@@ -1,0 +1,186 @@
+<html><head>
+
+<title>Manpage of C3.CONF</title>
+</head><body>
+
+<h1>C3.CONF</h1>
+Section: C3 User Manual (5)<br><a href="#index">Index</a>
+<a href="C3documentation.html">Return to Main Contents</a><hr>
+
+<a name="lbAB">&nbsp;</a>
+<h2>NAME</h2>
+
+<p>
+
+<i>c3.conf</i> - The default cluster definition file and its format.
+<p>
+<a name="lbAC">&nbsp;</a>
+<h2>DESCRIPTION</h2>
+
+<p>
+
+Specific instances of C3 commands identify their compute nodes with the help of **cluster configuration files**:  files that name a set of accessible clusters and describe the set of machines in each accessible cluster. 
+
+
+/etc/c3.conf, the default cluster configuration file, should consist of a list of **cluster descriptor blocks**:  syntactic objects that name and describe a single cluster that is accessible to that system's users.
+
+
+The following is an example of a default configuration file that contains exactly one cluster descriptor block:  a block that describes a cluster of 64 nodes:
+<p>
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;local&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;htorc-00:node0&nbsp;&nbsp;#head&nbsp;node
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[1-64]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#compute&nbsp;nodes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<p>
+
+<b>Cluster description blocks</b> consist of the following basic elements:
+<dl compact>
+<dt><dd>
+-. a **cluster tag**:  the word &quot;cluster&quot;, followed by a label, which assigns a name to the cluster.  This name (in the above example &quot;local&quot; )can be supplied to C3 commands as a way of specifying the cluster on which a command should execute.
+
+
+-. an open curly brace, which signals the start of the cluster's declaration proper.
+
+
+-. a **head node descriptor**:  a line that names the interfaces on the cluster's head node.  The head node descriptor shown here has two parts: 1)The string to the left of the colon identifies the head node's **external** interface: a network device that links the head node to computers outside the cluster.  This string can be the interface's IP address or DNS-style hostname. 2) The string to the right of the colon identifies the head node's **internal** interface: a network device that links the head node to nodes inside the cluster.  This string can be the interface's IP address or DNS-style hostname. In the example above, the head node descriptor names a head node with an external interface named htorc-00, and an internal interface named node0. If a cluster has no external interface--i.e., a cluster that is on a closed system--it can be specified by either making the internal and external name the same, or dropping the colon, and using one name in the specifier.
+
+
+-. a list of **compute node descriptors**:  a series of individual descriptors that name the cluster's compute nodes. The example given above contains exactly one compute node descriptor.  This descriptor uses a range to specify a cluster that contains 64 compute nodes, named node1, node2, etc., up through node64.  A range qualifier consists of a nonnegative integer, followed by a dash, and then a second integer that is at least as large as the first. This range must be between the brackets at the end of the node name. In the current version of the C3 tool set, these range values are treated as numbers, with no leading zeroes.  A declaration like
+<br>
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;local&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;htorc-00:node0&nbsp;&nbsp;#head&nbsp;node
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[01-64]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#compute&nbsp;nodes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>
+<br>
+expands to the same 64 nodes as the declaration shown above.  To specify a set of nodes with names like node01, node09, node10, ...node64, use declarations like
+<br>
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;local&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;htorc-00:node0&nbsp;&nbsp;#head&nbsp;node
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node0[1-9]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#compute&nbsp;nodes&nbsp;node01..node09
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[10-64]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#compute&nbsp;nodes&nbsp;node10..node64
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>
+<br>
+
+to end a cluster description block use a final, closing curly brace.
+
+
+Configuration files that specify multiple clusters are constituted as a list of cluster descriptor blocks--one per accessible cluster. The following example of a cluster configuration file contains three blocks that specify configurations for clusters named local, torc, and my-cluster, respectively:
+<br>
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;local&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;htorc-00:node0&nbsp;&nbsp;#head&nbsp;node
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[1-64]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#compute&nbsp;nodes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exclude&nbsp;2
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exclude&nbsp;[55-60]
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>&nbsp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;torc&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:orc-00b
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>&nbsp;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;my-cluster&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;osiris:192.192.192.2
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;woody
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dead&nbsp;riggs
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>
+<br>
+
+The first cluster in the file has a special significance that is analogous to the special significance accorded to the first declaration in a Makefile.  Any instance of a C3 command that fails to name the cluster on which it should run executes, by default, on the first cluster in the configuration file.  Here, for example, any command that fails to name its target cluster would default to local.
+
+
+The cluster configuration file shown above illustrates three final features of the cluster definition language:  **exclude qualifiers**, **dead qualifiers**, and **indirect cluster** descriptors.
+
+
+<b>Exclude qualifiers</b>
+allow nodes to be excluded from a cluster's configuration: i.e., to be identified as offline for the purpose of a command execution.  Exclude qualifiers may only be applied to range declarations, and must follow immediately after a range declaration to which they are being applied.  A series of exclude declarations is ended by a non-exclude declaration, or the final &quot;}&quot; in a cluster declaration block. An exclude qualifier can be written in one of three ways: &quot;exclude n&quot;, where n is the number of a node to exclude from the cluster; &quot;exclude[m-n]&quot;, where m is the start of a range and n is the end of a range. Note that a string like &quot;exclude5&quot; is parsed as a node name, rather than as an exclude qualifier (it does not match the above formats, a space must be between the exclude and a single number). In the above example, the two exclude qualifiers have the effect of causing node2, node55, node56 node57, node58, node59, and node60 to be treated as offline for the purpose of computation.
+
+
+<b>Dead qualifiers</b>
+are similar to exclude qualifiers, but apply to individual machines.  In the example given above, the machine named &quot;riggs&quot; in the cluster named &quot;my-cluster&quot; is excluded from all executions of C3. &quot;Dead&quot;, like &quot;exclude&quot;, is not a reserved word in the current version of the C3 suite.  A specification block like
+<br>
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;my-cluster&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alive:alive
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dead
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>
+<br>
+
+for example, declares a two-machine cluster with a head node named &quot;alive&quot; and a compute node named &quot;dead&quot;.
+
+
+<b>indirect cluster descriptor</b>
+is treated as a reference to another cluster, rather than as a description of a cluster per se.  In the main example shown above, the descriptor
+<br>
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;torc&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:orc-00b
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<br>
+<br>
+
+is an indirect cluster descriptor.  An indirect descriptor consists of a cluster tag, followed by, an <i>indirect head head node descriptor</i>. An indirect head node descriptor consists of an initial colon, followed by a string that names a **remote** system.  This name, which can either be an IP address or a DNS-style hostname, is checked whenever a C3 command executes to verify that that the machine being referenced is not the machine on which that command is currently executing.
+
+
+The indirect cluster descriptors can be used to construct **chains** of remote references:  that is, multiple levels of indirection configurations where an indirect cluster descriptor on a machine A references an indirect cluster descriptor on a machine B.  Here, it is the system administrator's responsibility to avoid circular references.
+</dl>
+<a name="lbAD">&nbsp;</a>
+<h2>SEE ALSO</h2>
+
+<a href="cexec.html">cexec</a>(1), <a href="c3.html">c3</a>(1), <a href="cget.html">cget</a>(1), <a href="ckill.html">ckill</a>(1), <a href="cpush.html">cpush</a>(1
+), <a href="cpushimage.html">cpushimage</a>(4), <a href="crm.html">crm</a>(1), <a href="cshutdown.html">cshutdown</a>(4), <a href="cname.html">cname</a>(1), <a href="cnum.html">cnum</a>(1), <a href="clist.html">clist</a>(1), <a href="c3.conf.html">c3.conf</a>(5), <a href="c3-scale.html">c3-scale</a>(5)
+
+<p>
+
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
+<dl>
+<dt><a href="#lbAB">NAME</a><dd>
+<dt><a href="#lbAC">DESCRIPTION</a><dd>
+<dt><a href="#lbAD">SEE ALSO</a><dd>
+</dl>
+<hr>
+<!-- FOOTER -->
+<hr>
+<center>
+<br>
+<font size="4">
+<b>
+  <a href="http://www.csm.ornl.gov/srt/">SRT</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="http://www.csm.ornl.gov/torc/">TORC</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="index.html">C3 Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3softwarepage.html">Download</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="C3notespage.html">Notes</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="C3documentation.html">Documentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3paperspage.html">Papers</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3peoplepage.html">Contacts</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3relatedresearch.html">Related Research</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</b>
+</font>
+</center>
+
+<hr>
+
+<font size="3">
+For user questions and information about releases, email/subscribe to:
+<a href="https://elist.ornl.gov/mailman/listinfo/c3-users">c3-users</a>
+<br>
+For report bugs or problem, e-mail: <a href="mailto:c3-devel@ornl.gov">c3-devel@ornl.gov</a>
+<br><br>
+<i><a href="http://www.csm.ornl.gov/">Computer Science and Math Division</a></i><br>
+<i><a href="http://www.ornl.gov/">Oak Ridge National Laboratory</a></i><br>
+
+</font>
+
+<i>
+Last Modified: 
+               Sun  04-10-2022
+</i>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<html><head>
+
+<title>Manpage of C3-RANGE</title>
+</head><body>
+
+<h1>C3-RANGE</h1>
+Section: C3 User Manual (5)<br>Updated: 4.0<br><a href="#index">Index</a>
+<a href="C3documentation.html">Return to Main Contents</a><hr>
+
+<a name="lbAB">&nbsp;</a>
+<h2>NAME</h2>
+
+<p>
+
+<b>c3-range</b> - how to use and specify ranges on the command line in C3
+<p>
+<p>
+<a name="lbAC">&nbsp;</a>
+<h2>SYNOPSIS</h2>
+
+<p>
+
+Ranges can be used to make sub clusters from the command line. It is also useful to system administrators for testing new software on a small set of machines. 
+<a name="lbAD">&nbsp;</a>
+<h2>DESCRIPTION</h2>
+
+<p>
+
+Ranges refer the the [MACHINE DEFINITIONS] in the help on the command line tools. They consist of two parts, the <i>cluster name</i> and a <i>range</i>. If no range is specified then all the nodes of that cluster will participate in execution.
+<a name="lbAE">&nbsp;</a>
+<h2>GENERAL</h2>
+
+<p>
+
+Node ranges on the command line refer to their position in a cluster configuration file. For the examples in this page we will use the following cluster configuration file:
+<p>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;cluster&nbsp;test&nbsp;{
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;external:internal
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node[0-9]
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exclude&nbsp;5
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dead&nbsp;node32
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;node64
+<br>&nbsp;&nbsp;&nbsp;&nbsp;}
+<p>
+
+
+<b>Node Position</b><br>
+For a detailed explanation of this format refer to <i><a href="c3.conf.html">c3.conf</a>(5)</i>. This cluster consists of 11 nodes. In C3 the place that node occupies in the configuration file is significant. the first machine defined on the above example--&quot;external:internal&quot;--is the head node and will not participate in execution. The following node range represents 9 nodes, node0...node9, occupying positions 0-9 respectively. node5 is offline for some reason but still needs to occupy a space so that the command line ranges stay consistent from execution to execution. The next node (in position 10) is node32 (position in the command line argument is independent of the node's name, only the position in the file matters). the dead qualifier has the same effect as the exclude - it keeps that nodes position while still leaving it offline. The last node, node65, occupies position 11.
+<br>
+<br>
+<b>Specifying ranges</b><br>
+Ranges can be specified in two ways, one as a range, and the other as a single node. ranges are specified by the following format: m-n, where m is a positive integer (including zero) and n is a number larger than m. Single positions are just the position number. If discontinuous ranges are needed, each range must be separated by a &quot;,&quot;. The range &quot;0-5, 9, 11&quot; would execute on positions 0,1,2,3,4,5,9,11 (though in our example position 5 is offline so it would be skipped). There are two tools used to help manage keeping track of which nodes are at which position: <b><a href="cname.html">cname</a>(1)</b> and <b><a href="cnum.html">cnum</a>(1)</b>. cname assumes that you know a single node name and want to know its position. cnum takes a range argument and returns the node names at those positions (if no range is specified it assumes that you want all the nodes in the cluster). See their man pages for details of use. <i>NOTE: ranges begin at zero!</i>
+<br>
+<br>
+<b>MACHINE DEFINITIONS</b><br>
+Machine definitions are what C3 uses to specify clusters and ranges on the command line. There are four cases a machine definition can take. First is that one is not specified at all. C3 will execute on all the nodes on the default cluster in this case. The second case is a range on the default cluster. This is in a form of &lt;<b>:range</b>&gt;. An example cexec would be as follows:
+
+<br>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cexec&nbsp;:1-4,6&nbsp;ls&nbsp;-l
+<br>
+<br>
+This would execute ls on nodes 1,2,3,4,6 of the default cluster. The third method is specifying a specific cluster. This takes the form of &lt;<b>cluster_name:</b>&gt;. And example cexec would be as follows:
+
+<br>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cexec&nbsp;test:&nbsp;ls&nbsp;-l
+<br>
+<br>
+This would execute ls on every node in cluster test. The fourth and final way of specifying a machine definition would be a range on a specific cluster. This takes the form of &lt;<b>cluster_name:range</b>&gt;. An example cexec would be as follows:
+
+<br>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cexec&nbsp;test:2-4,10&nbsp;ls&nbsp;-l
+<br>
+<br>
+This would execute ls on nodes 2,3,4,10 on cluster test. These four methods can be mixed on a single command line. for example
+
+<br>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cexec&nbsp;:0-4&nbsp;htorc1:&nbsp;htorc2:1-5&nbsp;ls&nbsp;-l
+<br>
+<br>
+is a valid command. it would execute ls on nodes 0,1,2,3,4 of the default cluster, all of htorc1 and 1,2,3,4,5 of htorc2.
+<br>
+<br>
+
+<b>Other</b><br>
+And lastly you can also specify a per cluster alternate username on the command line. Simply preface the cluster name with the username, followed by an &quot;@&quot; symbol. For example
+
+<br>
+<br>
+<tt>&nbsp;&nbsp;&nbsp;</tt>cexec sgrundy@: mmanhunter@htorc mmanhunter@htorc:1-5 xtorc: hostname<br>
+<br>
+
+That will log into the default cluster with the username &quot;sgrundy&quot;, htorc with &quot;mmanhunter&quot;, and xtorc with the current default username. Alternate usernames specified on the command line override both the local username and the C3_USER environment variable.
+</dl>
+<a name="lbAF">&nbsp;</a>
+<h2>SEE ALSO</h2>
+
+<a href="cexec.html">cexec</a>(1), <a href="c3.html">c3</a>(1), <a href="cget.html">cget</a>(1), <a href="ckill.html">ckill</a>(1), <a href="cpush.html">cpush</a>(1), <a href="cpushimage.html">cpushimage</a>(4), <a href="crm.html">crm</a>(1), <a href="cshutdown.html">cshutdown</a>(4), <a href="cname.html">cname</a>(1), <a href="cnum.html">cnum</a>(1), <a href="clist.html">clist</a>(1), <a href="c3.conf.html">c3.conf</a>(5), <a href="c3-scale.html">c3-scale</a>(5)
+<p>
+
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
+<dl>
+<dt><a href="#lbAB">NAME</a><dd>
+<dt><a href="#lbAC">SYNOPSIS</a><dd>
+<dt><a href="#lbAD">DESCRIPTION</a><dd>
+<dt><a href="#lbAE">GENERAL</a><dd>
+<dt><a href="#lbAF">SEE ALSO</a><dd>
+</dl>
+<hr>
+<!-- FOOTER -->
+<hr>
+<center>
+<br>
+<font size="4">
+<b>
+  <a href="http://www.csm.ornl.gov/srt/">SRT</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="http://www.csm.ornl.gov/torc/">TORC</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="index.html">C3 Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3softwarepage.html">Download</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="C3notespage.html">Notes</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="C3documentation.html">Documentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3paperspage.html">Papers</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3peoplepage.html">Contacts</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3relatedresearch.html">Related Research</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</b>
+</font>
+</center>
+
+<hr>
+
+<font size="3">
+For user questions and information about releases, email/subscribe to:
+<a href="https://elist.ornl.gov/mailman/listinfo/c3-users">c3-users</a>
+<br>
+For report bugs or problem, e-mail: <a href="mailto:c3-devel@ornl.gov">c3-devel@ornl.gov</a>
+<br><br>
+<i><a href="http://www.csm.ornl.gov/">Computer Science and Math Division</a></i><br>
+<i><a href="http://www.ornl.gov/">Oak Ridge National Laboratory</a></i><br>
+
+</font>
+
+<i>
+Last Modified: 
+               Tue  08-11-2020
+</i>
+</body>
+</html>

@@ -119,7 +119,7 @@ B. C3 install
       'make' tools at the top of the source tree. To compile and install C3
       from sources, execute, 
 
-        ./autogen.sh && ./configure && make
+        autoreconf --install && ./configure && make && make install
 
       It is also possible to specify to target for the install using the
       DESTDIR parameter. For example, the following will install C3 into
@@ -134,9 +134,9 @@ B. C3 install
       installed in "/opt"), therefore the autotools are more suitable.
 
       Uninstallation using Makefile -- run the following to clean and
-      uninstall C3,
+      uninstall C3, (needs sudo since it deletes files under /opt/)
 
-        make clean
+        sudo make clean
 
       If C3 has been installed in a specific directory, please use the
       DESTDIR parameter. For example, will uninstall C3 from "/tmp/my_test",
@@ -146,6 +146,16 @@ B. C3 install
 
  (ii) Installation for Debian 
 
+      * NOTE: None of the repos below are available any longer. You MUST build
+      from source instead.
+      
+      The easiest way to get things properly installed for Debian is to 
+      do the following,
+      
+        autoreconf --install && ./configure && make dist-deb
+        dpkg -i c3_VER.deb
+
+	
        You can install the packages using 'apt-get' from
        online repositories by adding the following to your 
        '/etc/apt/sources.list' file for the appropriate version/release, 

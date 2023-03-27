@@ -1,0 +1,174 @@
+
+<html><head>
+
+<title>Manpage of Clist</title>
+</head><body>
+
+<h1>Clist</h1>
+Section: C3 User Manual (1)<br>Updated: 4.0<br><a href="#index">Index</a>
+<a href="C3documentation.html">Return to Main Contents</a><hr>
+
+<a name="lbAB">&nbsp;</a>
+<h2>NAME</h2>
+
+<p>
+
+<b>clist</b> - A utility that lists the names and types of clusters in the cluster configuration file.
+<p>
+<p>
+<p>
+<a name="lbAC">&nbsp;</a>
+<h2>SYNOPSIS</h2>
+
+<p>
+
+Usage: <b>clist</b> [OPTIONS]
+<a name="lbAD">&nbsp;</a>
+<h2>DESCRIPTION</h2>
+
+<p>
+
+<b>clist</b> is a utility that lists the names and types of clusters in a cluster configuration file. The different types of clusters are as follows:
+<dl compact>
+<dt><i>direct local</i><dd>
+All the information about the cluster is known before run time and the head node is the machine on which the command is run
+<dt><i>direct remote</i><dd>
+All the information about the cluster is known before run time and the head node is not the machine from which the command is run
+<dt><i>indirect remote</i><dd>
+Only the head node of the cluster is known at run time and is not the machine from which the command is run from
+</dl>
+<p>
+
+for more information on these three types of clusters see the <a href="c3.conf.html">c3.conf</a>(5) help file
+<a name="lbAE">&nbsp;</a>
+<h2>OPTIONS</h2>
+
+<p>
+
+<dl compact>
+<dt><b>--help -h</b><dd>
+:display help message
+<p>
+<dt><b>--file -f &lt;filename&gt;</b><dd>
+:alternate cluster configuration file, if one is not supplied then <i>/etc/c3.conf</i> will be used
+</dl>
+<a name="lbAF">&nbsp;</a>
+<h2>GENERAL</h2>
+
+<p>
+
+There are two ways to call clist:
+
+
+<p>
+
+1. To list all clusters from the default configuration file:
+<dl compact>
+<dt><dd>
+<b>clist</b>
+<dt><dd><br>
+This prints each cluster and its type, one per line
+<p>
+</dl>
+<p>
+
+2. To list all clusters from an alternate configuration file
+<dl compact>
+<dt><dd>
+<b>clist -f alt.cluster</b>
+<dt><dd><br>
+This prints each cluster and its type, one per line
+</dl>
+<a name="lbAG">&nbsp;</a>
+<h2>SETUP</h2>
+
+<p>
+
+See the C3 INSTALL file for installation instructions.
+<a name="lbAH">&nbsp;</a>
+<h2>ENVIRONMENT</h2>
+
+<p>
+
+C3_CONF
+<dl compact>
+<dt><dd>
+C3's default configuration file is /etc/c3.conf. If you wish an alternate default configuration file set this to point to the file
+<dt><dd>
+For example, if you keep a special c3.conf file in your home directory you may use:
+<dt><dd><br>
+<b>export C3_CONF=/home/sgrundy/.c3conf</b>
+<dt><dd>
+</dl>
+<a name="lbAI">&nbsp;</a>
+<h2>FILES</h2>
+
+<p>
+
+<b></b><i>/etc/c3.conf</i>
+<dl compact>
+<dt><dd>
+This file is the cluster configuration file that contains the names of the nodes to which commands will be sent. The cluster configuration file of nodes may also be specified from the command line. The format of both files is identical.
+<dt><dd>
+see the <a href="c3.conf.html">c3.conf</a>(5) man page for format
+</dl>
+<a name="lbAJ">&nbsp;</a>
+<h2>SEE ALSO</h2>
+
+<a href="cexec.html">cexec</a>(1), <a href="c3.html">c3</a>(1), <a href="cget.html">cget</a>(1), <a href="ckill.html">ckill</a>(1), <a href="cpush.html">cpush</a>(1
+), <a href="cpushimage.html">cpushimage</a>(4), <a href="crm.html">crm</a>(1), <a href="cshutdown.html">cshutdown</a>(4), <a href="cname.html">cname</a>(1), <a href="cnum.html">cnum</a>(1), <a href="clist.html">clist</a>(1), <a href="c3.conf.html">c3.conf</a>(5), <a href="c3-scale.html">c3-scale</a>(5)
+
+<p>
+
+<hr>
+<a name="index">&nbsp;</a><h2>Index</h2>
+<dl>
+<dt><a href="#lbAB">NAME</a><dd>
+<dt><a href="#lbAC">SYNOPSIS</a><dd>
+<dt><a href="#lbAD">DESCRIPTION</a><dd>
+<dt><a href="#lbAE">OPTIONS</a><dd>
+<dt><a href="#lbAF">GENERAL</a><dd>
+<dt><a href="#lbAG">SETUP</a><dd>
+<dt><a href="#lbAH">ENVIRONMENT</a><dd>
+<dt><a href="#lbAI">FILES</a><dd>
+<dt><a href="#lbAJ">SEE ALSO</a><dd>
+</dl>
+<hr>
+<!-- FOOTER -->
+<hr>
+<center>
+<br>
+<font size="4">
+<b>
+  <a href="http://www.csm.ornl.gov/srt/">SRT</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="http://www.csm.ornl.gov/torc/">TORC</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="index.html">C3 Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3softwarepage.html">Download</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<!--  <a href="C3notespage.html">Notes</a>&nbsp;&nbsp;&nbsp;&nbsp; -->
+  <a href="C3documentation.html">Documentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3paperspage.html">Papers</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3peoplepage.html">Contacts</a>&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="C3relatedresearch.html">Related Research</a>&nbsp;&nbsp;&nbsp;&nbsp;
+</b>
+</font>
+</center>
+
+<hr>
+
+<font size="3">
+For user questions and information about releases, email/subscribe to:
+<a href="https://elist.ornl.gov/mailman/listinfo/c3-users">c3-users</a>
+<br>
+For report bugs or problem, e-mail: <a href="mailto:c3-devel@ornl.gov">c3-devel@ornl.gov</a>
+<br><br>
+<i><a href="http://www.csm.ornl.gov/">Computer Science and Math Division</a></i><br>
+<i><a href="http://www.ornl.gov/">Oak Ridge National Laboratory</a></i><br>
+
+</font>
+
+<i>
+Last Modified: 
+               Sun  04-10-2022
+</i>
+</body>
+</html>
