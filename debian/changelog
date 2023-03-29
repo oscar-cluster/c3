@@ -1,3 +1,9 @@
+c3 (5.2.2-1) lucid; urgency=low
+
+  * Added html doc in package
+
+ -- Olivier Lahaye <olivier.lahaye1@free.fr>  Wed, 29 Mar 2023 10:53:52 +0200
+
 c3 (5.2.1-1) lucid; urgency=low
 
   * New upstream version released.

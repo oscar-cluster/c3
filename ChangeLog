@@ -151,5 +151,10 @@ Version 5.1.3
 Version 5.2
 	Port to python3.9
 
-Version 5.2.1 (not yet released)
+Version 5.2.1
 	Fix str/bytes mismatch when using pipes
+
+Version 5.2.2 (not yet released)
+	Add html doc in source from from web.archive.org wayback machine
+	  copy of https://www.csm.ornl.gov/torc/c3/C3documentation.shtml (James Brown)
+	Add doc in distro packaging.

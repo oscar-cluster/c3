@@ -143,6 +143,7 @@ fi
 %doc INSTALL README ChangeLog
 %doc doc/KNOWN_BUGS doc/README.devel doc/README.scale 
 %doc doc/README.c3_com_obj doc/README.c3_file_obj
+%doc doc/*.gif doc/*.html
 %{_bindir}/c3_com_obj.py
 %{_bindir}/c3_config.py
 %{_bindir}/c3_except.py
@@ -189,6 +190,9 @@ fi
 # ChangeLog section
 #---------------------------------------------------------------------
 %changelog
+* Wed Mar 29 2023  10:39:24AM    Olivier Lahaye <olivier.lahaye@cea.fr>
+- html doc included
+
 * Tue Mar  7 2023  12:08:52PM    Olivier Lahaye <olivier.lahaye@cea.fr>
 - Python3 version
 
